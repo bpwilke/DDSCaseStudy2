@@ -1,0 +1,148 @@
+---
+title: "DDSCaseStudy2"
+author: "Benjamin Wilke, Manny Rosales, Amy Paschal"
+date: "April 2, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(kableExtra) # to make uber sexy tables for output
+library(ggbiplot) # implementation of biplot using ggplot2 for plotting PCs
+library(Amelia) # cool library for exploring missing data
+library(pastecs) # for easy descriptive statistics
+library(ROCR) # for ROC plots and AUC calculations
+# turn off scientfic notation for the entire script
+options(scipen = 999)
+
+```
+
+## Introduction
+
+```{r, echo=TRUE}
+# load raw data
+employeeDatRaw <- read.csv('CaseStudy2data.csv', header=TRUE)
+```
+
+```{r, echo=TRUE, fig.width=8, fig.height=10}
+# display missing values map (graphic)
+missmap(employeeDatRaw, main="Missing Values in Raw Data")
+```
+
+# Exploratory Data Analysis
+
+```{r, echo=TRUE}
+
+# descriptive statistics, load into new data frame for processing
+descriptiveTable <- stat.desc(employeeDatRaw)
+
+# remove non-numeric features
+dropcolumns <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime")
+descriptiveTable <- descriptiveTable[,!(colnames(descriptiveTable) %in% dropcolumns)]
+
+# round all numeric values to 2 decimal points
+descriptiveTable <- round(descriptiveTable, 2)
+
+# remove rows for statistics we don't care about, leaving: N, Mean, Median, Std Dev, Var, Min, Max
+remove <- c("CI.mean.0.95", "nbr.val", "nbr.null", "nbr.na", "range", "sum", "SE.mean", "CI.mean", "coef.var")
+descriptiveTable <- descriptiveTable[-which(rownames(descriptiveTable) %in% remove),]
+
+# display descriptive statistics
+knitr::kable(descriptiveTable,caption = "Descriptive Statistics for Numeric Features in the Raw Employee Data", row.names = TRUE, "html") %>%
+  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
+
+```
+
+# Principal Components Analysis
+
+```{r, echo=TRUE}
+# remove non-numeric features, and features with zero variance
+dropcolumnsPCA <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime", "EmployeeCount", "StandardHours")
+employeeDatPCA <- employeeDatRaw[,!(colnames(employeeDatRaw) %in% dropcolumnsPCA)]
+
+# extract labels (player made it into HOF), convert to factor
+#BBHOF_Labels_PCA <- BBHOFRaw["HOFMembership"]
+#BBHOF_Labels_PCA$HOFMembership <- as.factor(BBHOF_Labels_PCA$HOFMembership)
+
+# perform PCA
+employee_PCA <- prcomp(employeeDatPCA, center=TRUE, scale.=TRUE)
+
+# print principal components (only the first 4 PCs)
+print(employee_PCA$rotation[,1:4])
+
+# summary of principal components
+summary(employee_PCA)
+```
+
+```{r, echo=TRUE, fig.width=15, fig.height=10}
+# plot PCs using ggbiplot
+ggbiplot(employee_PCA, obs.scale=1, var.scale=1, groups=employeeDatPCA$Attrition, ellipse=TRUE, circle=TRUE) + theme(legend.position='top') + scale_color_discrete()
+```
+
+
+alright....working some logistic regression..
+
+```{r, echo=TRUE}
+
+# copy data set, we can remove features with the dropcolumns as needed to play with the model
+# I'm dropping variables with no variation per this 
+# https://stackoverflow.com/questions/18171246/error-in-contrasts-when-defining-a-linear-model-in-r
+# Solution: There is not enough variation in dependent variable with only one value. So, you need to drop that variable, irrespective of whether that is numeric or character or factor variable.
+
+employee_logistic <- employeeDatRaw
+dropcolumns <- c("EmployeeCount", "StandardHours", "Over18")
+employee_logistic <- employee_logistic[,!(colnames(employee_logistic) %in% dropcolumns)]
+
+# convert Attrition to 1 and 0 from character based factor
+# convert factor levels to numeric
+employee_logistic$Attrition <- as.numeric(as.factor(employee_logistic$Attrition))
+# change the 2's (No) to 0's
+employee_logistic$Attrition[employee_logistic$Attrition == 2] <- 0
+# convert back to factor
+employee_logistic$Attrition <- as.factor(employee_logistic$Attrition)
+
+# split the raw data into testing and training data
+set.seed(100) # set seed so that same sample can be reproduced in future
+
+# now selecting 75% of data as sample from total 'n' rows of the data  
+sample <- sample.int(n=nrow(employee_logistic), size=floor(.75*nrow(employee_logistic)), replace=FALSE)
+
+# subset the data using the sample integer vector created above
+train <- employee_logistic[sample, ]
+test  <- employee_logistic[-sample, ]
+
+# fitting the binomial logistic regression model, Attrition is dependent, fitting using all features
+model <- glm(train$Attrition ~., family=binomial(link='logit'),data=train)
+
+summary(model)
+
+# predict based on the test data, type='response' output probabilities in the form of P(y=1|X)
+fittedresults <- predict(model, newdata=test, type='response')
+
+# count any NAs in the fittedresults
+sum(is.na(fittedresults))
+
+# if P(y=1|X) > 0.5 then y = 1 otherwise y=0
+fittedresults <- ifelse(fittedresults > 0.5, 1, 0)
+
+# calculate the mean of the fitted results that don't equal the observed result - IGNORE NAs
+misClasificError <- mean(fittedresults != test$Attrition, na.rm=TRUE) # this adds up all the instances of misclassification then divides by total (via mean)
+
+# print the output as 100% - error
+print(paste('Accuracy',1-misClasificError))
+
+
+```
+
+and now some ROC curves...
+
+```{r, echo=TRUE}
+
+pr <- prediction(fittedresults, test$Attrition)
+prf <- performance(pr, measure = "tpr", x.measure = "fpr")
+plot(prf)
+
+auc <- performance(pr, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+
