@@ -60,10 +60,6 @@ knitr::kable(descriptiveTable,caption = "Descriptive Statistics for Numeric Feat
 dropcolumnsPCA <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime", "EmployeeCount", "StandardHours")
 employeeDatPCA <- employeeDatRaw[,!(colnames(employeeDatRaw) %in% dropcolumnsPCA)]
 
-# extract labels (player made it into HOF), convert to factor
-#BBHOF_Labels_PCA <- BBHOFRaw["HOFMembership"]
-#BBHOF_Labels_PCA$HOFMembership <- as.factor(BBHOF_Labels_PCA$HOFMembership)
-
 # perform PCA
 employee_PCA <- prcomp(employeeDatPCA, center=TRUE, scale.=TRUE)
 
