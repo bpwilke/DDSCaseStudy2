@@ -748,10 +748,6 @@ std.dev
 dropcolumnsPCA &lt;- c(&quot;Attrition&quot;, &quot;BusinessTravel&quot;, &quot;Department&quot;, &quot;EducationField&quot;, &quot;Gender&quot;, &quot;JobRole&quot;, &quot;MaritalStatus&quot;, &quot;Over18&quot;, &quot;OverTime&quot;, &quot;EmployeeCount&quot;, &quot;StandardHours&quot;)
 employeeDatPCA &lt;- employeeDatRaw[,!(colnames(employeeDatRaw) %in% dropcolumnsPCA)]
 
-# extract labels (player made it into HOF), convert to factor
-#BBHOF_Labels_PCA &lt;- BBHOFRaw[&quot;HOFMembership&quot;]
-#BBHOF_Labels_PCA$HOFMembership &lt;- as.factor(BBHOF_Labels_PCA$HOFMembership)
-
 # perform PCA
 employee_PCA &lt;- prcomp(employeeDatPCA, center=TRUE, scale.=TRUE)
 
