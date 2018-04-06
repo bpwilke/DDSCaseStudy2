@@ -24,10 +24,14 @@ options(scipen = 999)
 employeeDatRaw <- read.csv('CaseStudy2data.csv', header=TRUE)
 ```
 
-```{r, echo=TRUE, fig.width=8, fig.height=10}
-# display missing values map (graphic)
-missmap(employeeDatRaw, main="Missing Values in Raw Data")
+### Checking for missing data values . . .
+
+```{r, echo=TRUE}
+# check for missing data values
+numNAs <- sum(apply(employeeDatRaw,2,is.na))
 ```
+
+#### Number of missing data values = `r numNAs`
 
 # Exploratory Data Analysis
 
