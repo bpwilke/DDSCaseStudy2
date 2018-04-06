@@ -2,7 +2,9 @@
 title: "DDSCaseStudy2"
 author: "Benjamin Wilke, Manny Rosales, Amy Paschal"
 date: "April 2, 2018"
-output: html_document
+output:
+  html_document:
+    keep_md: true
 ---
 ```{r setup, include=FALSE}
 # Load necessary packages and ensure they are active
