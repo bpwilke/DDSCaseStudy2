@@ -24,14 +24,43 @@ options(scipen = 999)
 employeeDatRaw <- read.csv('CaseStudy2data.csv', header=TRUE)
 ```
 
-### Checking for missing data values . . .
+
+## Data Cleanup and Conversion
+
+#### Checking for missing data values . . .
 
 ```{r, echo=TRUE}
 # check for missing data values
 numNAs <- sum(apply(employeeDatRaw,2,is.na))
 ```
 
-#### Number of missing data values = `r numNAs`
+##### Number of missing data values = `r numNAs`
+
+#### Columns with no variation have no impact on attrition. Dropping . . .
+
+```{r, echo=TRUE}
+zeroVariation <- function(x) {
+ if (length(unique(x)) == 1)
+ {
+        return(TRUE)
+ }
+ return(FALSE)
+}
+
+# look for and drop columns with no variation
+drop_columns <- which(apply(employeeDatRaw, 2, zeroVariation))
+cols <- names(drop_columns)
+employeeDatRaw <- employeeDatRaw[,-drop_columns]
+
+# find columns of class factor
+factor_columns <- names(which(sapply(names(employeeDatRaw),function(x) class(employeeDatRaw[[x]])=="factor")))
+
+# convert factors to numeric
+employeeDatRaw[,factor_columns] <- sapply(factor_columns,function(x) as.numeric(employeeDatRaw[[x]]))
+```
+
+##### Dropped columns: `r cols`
+##### Factor columns: `r factor_columns`
 
 # Exploratory Data Analysis
 
