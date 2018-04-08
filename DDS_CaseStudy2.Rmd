@@ -9,9 +9,10 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(kableExtra) # to make uber sexy tables for output
 library(ggbiplot) # implementation of biplot using ggplot2 for plotting PCs
-library(Amelia) # cool library for exploring missing data
 library(pastecs) # for easy descriptive statistics
 library(ROCR) # for ROC plots and AUC calculations
+
+library(glmnet)
 # turn off scientfic notation for the entire script
 options(scipen = 999)
 
@@ -24,9 +25,16 @@ options(scipen = 999)
 employeeDatRaw <- read.csv('CaseStudy2data.csv', header=TRUE)
 ```
 
-```{r, echo=TRUE, fig.width=8, fig.height=10}
-# display missing values map (graphic)
-missmap(employeeDatRaw, main="Missing Values in Raw Data")
+# Missing Values
+
+Fortunately, this data is not missing any values as demonstrated by the table below.
+
+```{r, echo=TRUE}
+# calculate NAs for raw data
+NAdataframe <- sapply(employeeDatRaw, function(x) sum(is.na(x)))
+# display NAs in kable table
+knitr::kable(NAdataframe, caption = "Counts of NAs (Missing Values) in Raw Data", row.names = TRUE, "html") %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"), full_width=FALSE, position = "left")
 ```
 
 # Exploratory Data Analysis
@@ -75,10 +83,17 @@ summary(employee_PCA)
 ggbiplot(employee_PCA, obs.scale=1, var.scale=1, groups=employeeDatPCA$Attrition, ellipse=TRUE, circle=TRUE) + theme(legend.position='top') + scale_color_discrete()
 ```
 
+# Exploring Attrition with Binomial Logistic Regression
 
-alright....working some logistic regression..
+Binomial logistic regression is a special form of mutiple regression that is used to model a dichotomous outcome. In our case, this outcome is whether an employee left the company or is still a current employee.
 
-```{r, echo=TRUE}
+The executive leadership has identified predicting employee turnover as a primary application of data science for talent management. We will use binomial logistic regression to understand how certain explanatory variables may influence the likelihood of empoyee attrition. We will also identify a prediction model using explanatory variables in the data provided. This model can be used to identify high risk individuals to prioritize corrective action to improve employee attrition.
+
+The first model will use all available continuous and categorical variables - that is, fitting a full model. Some variables must be left out as they do not have any variability and will cause the model fitting to error. These varables are: EmployeeCount, StandardHours, and Over18. For more information on these variables please review the Exploratory Data Analysis section.
+
+The model will be fitted on 80% of the data selected at random from the raw data. The remaining 20% will be used to assess the prediction capability.
+
+```{r, echo=TRUE, fig.width=6}
 
 # copy data set, we can remove features with the dropcolumns as needed to play with the model
 # I'm dropping variables with no variation per this 
@@ -98,10 +113,10 @@ employee_logistic$Attrition[employee_logistic$Attrition == 2] <- 0
 employee_logistic$Attrition <- as.factor(employee_logistic$Attrition)
 
 # split the raw data into testing and training data
-set.seed(100) # set seed so that same sample can be reproduced in future
+set.seed(50) # set seed so that same sample can be reproduced in future
 
-# now selecting 75% of data as sample from total 'n' rows of the data  
-sample <- sample.int(n=nrow(employee_logistic), size=floor(.75*nrow(employee_logistic)), replace=FALSE)
+# now selecting 80% of data as sample from total 'n' rows of the data  
+sample <- sample.int(n=nrow(employee_logistic), size=floor(.80*nrow(employee_logistic)), replace=FALSE)
 
 # subset the data using the sample integer vector created above
 train <- employee_logistic[sample, ]
@@ -111,12 +126,13 @@ test  <- employee_logistic[-sample, ]
 model <- glm(train$Attrition ~., family=binomial(link='logit'),data=train)
 
 summary(model)
+```
 
+We will now test the predictive capablity of this full model.
+
+```{r, echo=TRUE}
 # predict based on the test data, type='response' output probabilities in the form of P(y=1|X)
 fittedresults <- predict(model, newdata=test, type='response')
-
-# count any NAs in the fittedresults
-sum(is.na(fittedresults))
 
 # if P(y=1|X) > 0.5 then y = 1 otherwise y=0
 fittedresults <- ifelse(fittedresults > 0.5, 1, 0)
@@ -126,19 +142,206 @@ misClasificError <- mean(fittedresults != test$Attrition, na.rm=TRUE) # this add
 
 # print the output as 100% - error
 print(paste('Accuracy',1-misClasificError))
+```
 
+The model already exhibits very high predictive capability (86.4%), but we will now refit the model using only variables with signficance from the full model. This done to simplify the model for interpretation and to reduce potential multicolinearity issues.
+
+The model will be fit with the following features:
+
+BusinessTravel
+DistanceFromHome
+EnvironmentSatisfaction
+Gender
+JobInvolvement
+JobRole (??)
+JobSatisfaction
+MaritalStatus
+NumCompaniesWorked
+OverTime
+RelationshipSatisfaction
+TotalWorkingYears
+TrainingTimesLastYear
+WorkLifeBalance
+YearsAtCompany
+YearsInCurrentRole
+YearsSinceLastPromotion
+YearsWithCurrManager
+
+```{r, echo=TRUE}
+employee_logistic <- employeeDatRaw
+dropcolumns <- c("EmployeeCount", "StandardHours", "Over18") # revmoving these again, because they can't be used in the model
+employee_logistic <- employee_logistic[,!(colnames(employee_logistic) %in% dropcolumns)]
+
+# keep only features as noted above (and Attrition for predictions)
+keepcolumns <- c("BusinessTravel", "DistanceFromHome", "EnvironmentSatisfaction",
+"Gender", "JobInvolvement", "JobRole", "JobSatisfaction", "MaritalStatus",
+"NumCompaniesWorked", "OverTime", "RelationshipSatisfaction",
+"TotalWorkingYears", "TrainingTimesLastYear", "WorkLifeBalance",
+"YearsAtCompany", "YearsInCurrentRole", "YearsSinceLastPromotion",
+"YearsWithCurrManager", "Attrition")
+employee_logistic <- employee_logistic[,(colnames(employee_logistic) %in% keepcolumns)]
+
+# convert Attrition to 1 and 0 from character based factor
+# convert factor levels to numeric
+employee_logistic$Attrition <- as.numeric(as.factor(employee_logistic$Attrition))
+# change the 2's (No) to 0's
+employee_logistic$Attrition[employee_logistic$Attrition == 2] <- 0
+# convert back to factor
+employee_logistic$Attrition <- as.factor(employee_logistic$Attrition)
+
+# split the raw data into testing and training data
+set.seed(50) # set seed so that same sample can be reproduced in future
+
+# now selecting 80% of data as sample from total 'n' rows of the data  
+sample <- sample.int(n=nrow(employee_logistic), size=floor(.80*nrow(employee_logistic)), replace=FALSE)
+
+# subset the data using the sample integer vector created above
+train <- employee_logistic[sample, ]
+test  <- employee_logistic[-sample, ]
+
+# fitting the binomial logistic regression model, Attrition is dependent, fitting using all features
+model <- glm(train$Attrition ~., family=binomial(link='logit'),data=train)
+
+summary(model)
+```
+
+We will now test the predictive capablity of this reduced model.
+
+```{r, echo=TRUE}
+# predict based on the test data, type='response' output probabilities in the form of P(y=1|X)
+fittedresults <- predict(model, newdata=test, type='response')
+
+# if P(y=1|X) > 0.5 then y = 1 otherwise y=0
+fittedresults <- ifelse(fittedresults > 0.5, 1, 0)
+
+# calculate the mean of the fitted results that don't equal the observed result - IGNORE NAs
+misClasificError <- mean(fittedresults != test$Attrition, na.rm=TRUE) # this adds up all the instances of misclassification then divides by total (via mean)
+
+# print the output as 100% - error
+print(paste('Accuracy',1-misClasificError))
+```
+
+The predictive capability of this reduced model improved slightly and has now been simplifed quite a bit in terms of the number of features.
+
+
+
+
+
+
+# Using GLMNET for Feature Selection of Logistic Regression
+```{r, echo=TRUE}
+employee_logistic <- employeeDatRaw
+dropcolumns <- c("EmployeeCount", "StandardHours", "Over18") # removing these again, because they can't be used in the model
+employee_logistic <- employee_logistic[,!(colnames(employee_logistic) %in% dropcolumns)]
+
+# convert Attrition to 1 and 0 from character based factor
+# convert factor levels to numeric
+employee_logistic$Attrition <- as.numeric(as.factor(employee_logistic$Attrition))
+# change the 2's (No) to 0's
+employee_logistic$Attrition[employee_logistic$Attrition == 2] <- 0
+# convert back to factor
+employee_logistic$Attrition <- as.factor(employee_logistic$Attrition)
+
+# split the raw data into testing and training data
+set.seed(50) # set seed so that same sample can be reproduced in future
+
+# now selecting 80% of data as sample from total 'n' rows of the data  
+sample <- sample.int(n=nrow(employee_logistic), size=floor(.80*nrow(employee_logistic)), replace=FALSE)
+
+# subset the data using the sample integer vector created above
+train <- employee_logistic[sample, ]
+test  <- employee_logistic[-sample, ]
+
+# # # START GLMNET for Logistic Regression Feature Selection # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+# isolate the binary response "Attrition" from the training data
+GLMTrain.y <- train$Attrition
+GLMTrain.y <- as.factor(as.character(GLMTrain.y))
+
+# create train data set while removing "Attrition" from the training data
+GLMTrain.x <- train[,!(colnames(train) == "Attrition")]
+
+#Categorical variables are usually first transformed into factors, then a dummy variable matrix of predictors is created and along with the continuous predictors, is passed to the model. Keep in mind, glmnet uses both ridge and lasso penalties, but can be set to either alone.
+
+# isolate categorical/factors from the continuous features, create dummy variable matrix for all factors
+GLMTrain.xfactors <- model.matrix(GLMTrain.y ~ GLMTrain.x$BusinessTravel + GLMTrain.x$Department + GLMTrain.x$EducationField + GLMTrain.x$Gender + GLMTrain.x$JobRole + GLMTrain.x$MaritalStatus + GLMTrain.x$OverTime)[, -1]
+
+# remove categorical/factors from GLMTrain.x as they will be added back in the form of dummy variable matrix from above
+dropcolumns <- c("BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "OverTime") 
+GLMTrain.x <- GLMTrain.x[,!(colnames(GLMTrain.x) %in% dropcolumns)]
+
+# combine GLMTrain.x continuous variables with GLMTrain.xfactors dummy variable matrix, then converting whole thing to a matrix for glmnet
+GLMTrain.x <- as.matrix(data.frame(GLMTrain.x, GLMTrain.xfactors))
+
+# use glmnet to fit a binomial logistic regression
+glmnetfit <- glmnet(GLMTrain.x, GLMTrain.y, family = "binomial")
+
+plot(glmnetfit)
+coef(glmnetfit)
+
+# # # START Prediction from GLMNET fit model # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+# prepare the test data in a similar manner for GLMNET usage (create dummy variables, matrix, etc.)
+# create test data set while removing "Attrition" from the test data
+GLMTest.x <- test[,!(colnames(test) == "Attrition")]
+
+# isolate the binary response "Attrition" from the test data
+GLMTest.y <- test$Attrition
+GLMTest.y <- as.factor(as.character(GLMTest.y))
+
+# isolate categorical/factors from the continuous features, create dummy variable matrix for all factors
+GLMTest.xfactors <- model.matrix(GLMTest.y ~ GLMTest.x$BusinessTravel + GLMTest.x$Department + GLMTest.x$EducationField + GLMTest.x$Gender + GLMTest.x$JobRole + GLMTest.x$MaritalStatus + GLMTest.x$OverTime)[, -1]
+
+# remove categorical/factors from GLMTest.x as they will be added back in the form of dummy variable matrix from above
+dropcolumns <- c("BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "OverTime") 
+GLMTest.x <- GLMTest.x[,!(colnames(GLMTest.x) %in% dropcolumns)]
+
+# combine GLMTest.x continuous variables with GLMTest.xfactors dummy variable matrix, then converting whole thing to a matrix for glmnet
+GLMTest.x <- as.matrix(data.frame(GLMTest.x, GLMTest.xfactors))
+
+# predict based on the test data, type='response' output probabilities in the form of P(y=1|X)
+GLMfittedresults <- predict(glmnetfit, newx=GLMTest.x, type='response')
+
+# if P(y=1|X) > 0.5 then y = 1 otherwise y=0
+GLMfittedresults <- ifelse(GLMfittedresults > 0.5, 1, 0)
+
+# calculate the mean of the fitted results that don't equal the observed result - IGNORE NAs
+misClasificError <- mean(GLMfittedresults != GLMTest.y, na.rm=TRUE) # this adds up all the instances of misclassification then divides by total (via mean)
+
+# print the output as 100% - error
+print(paste('Accuracy',1-misClasificError))
 
 ```
+
+
+
+
+
+
+
+
+
+
+
 
 and now some ROC curves...
 
 ```{r, echo=TRUE}
-
+#Create ROC curves
 pr <- prediction(fittedresults, test$Attrition)
 prf <- performance(pr, measure = "tpr", x.measure = "fpr")
 plot(prf)
 
+#Ref line indicating poor performance, 50/50
+abline(a=0, b= 1)
+
+# calculate area under curve (AUC)
 auc <- performance(pr, measure = "auc")
 auc <- auc@y.values[[1]]
-auc
+
+# print AUC onto plot
+text(x = .40, y = .6,paste("AUC = ", round(auc,3), sep = ""))
+
+
+
 
