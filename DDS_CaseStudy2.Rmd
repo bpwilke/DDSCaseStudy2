@@ -277,7 +277,6 @@ GLMTrain.x <- as.matrix(data.frame(GLMTrain.x, GLMTrain.xfactors))
 glmnetfit <- glmnet(GLMTrain.x, GLMTrain.y, family = "binomial")
 
 plot(glmnetfit)
-coef(glmnetfit)
 
 # # # START Prediction from GLMNET fit model # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
