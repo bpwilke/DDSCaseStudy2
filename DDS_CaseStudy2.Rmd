@@ -2,11 +2,29 @@
 title: "DDSCaseStudy2"
 author: "Benjamin Wilke, Manny Rosales, Amy Paschal"
 date: "April 2, 2018"
-output: html_document
+output:
+  html_document:
+    keep_md: true
 ---
-
 ```{r setup, include=FALSE}
+# Load necessary packages and ensure they are active
+load.lib = c("kableExtra","ggplot2","Amelia","pastecs","ROCR","reshape2","devtools")
+
+install.lib = load.lib[!load.lib %in% installed.packages()]
+for(lib in install.lib){
+  install.packages(lib,dependences=TRUE)
+} 
+
+ggbi <- "ggbiplot"
+if (!ggbi %in% installed.packages()){
+  install_github("vqv/ggbiplot") # Not on CRAN, must install via GitHub using devtools package
+} 
+
+load.lib = c(load.lib,"ggbiplot")
+sapply(load.lib,require,character=TRUE)
+
 knitr::opts_chunk$set(echo = TRUE)
+library(plyr)
 library(kableExtra) # to make uber sexy tables for output
 library(ggbiplot) # implementation of biplot using ggplot2 for plotting PCs
 library(pastecs) # for easy descriptive statistics
@@ -14,8 +32,7 @@ library(ROCR) # for ROC plots and AUC calculations
 
 library(glmnet)
 # turn off scientfic notation for the entire script
-options(scipen = 999)
-
+options(scipen = 999, digits=2)
 ```
 
 ## Introduction
@@ -37,29 +54,144 @@ knitr::kable(NAdataframe, caption = "Counts of NAs (Missing Values) in Raw Data"
   kable_styling(bootstrap_options = c("striped","hover","condensed"), full_width=FALSE, position = "left")
 ```
 
-# Exploratory Data Analysis
+## Data Cleanup and Conversion
+
+#### Checking for missing data values . . .
+
+```{r, echo=TRUE}
+# check for missing data values
+numNAs <- sum(apply(employeeDatRaw,2,is.na))
+```
+
+##### Number of missing data values = `r numNAs`
+
+#### Columns with no variation have no impact on attrition. Dropping . . .
 
 ```{r, echo=TRUE}
 
-# descriptive statistics, load into new data frame for processing
-descriptiveTable <- stat.desc(employeeDatRaw)
+# look for and drop columns with no variation
+drop_columns <- which(apply(employeeDatRaw, 2, function(x) (length(unique(x)) == 1)))
+cols <- names(drop_columns)
+employeeDatRaw <- employeeDatRaw[,-drop_columns]
 
-# remove non-numeric features
-dropcolumns <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime")
-descriptiveTable <- descriptiveTable[,!(colnames(descriptiveTable) %in% dropcolumns)]
+# find columns of class factor
+factor_columns <- names(which(sapply(names(employeeDatRaw),function(x) class(employeeDatRaw[[x]])=="factor")))
 
-# round all numeric values to 2 decimal points
-descriptiveTable <- round(descriptiveTable, 2)
+# convert factors to numeric
+# employeeDatRaw[,factor_columns] <- sapply(factor_columns,function(x) as.numeric(employeeDatRaw[[x]])-1)
+```
 
-# remove rows for statistics we don't care about, leaving: N, Mean, Median, Std Dev, Var, Min, Max
-remove <- c("CI.mean.0.95", "nbr.val", "nbr.null", "nbr.na", "range", "sum", "SE.mean", "CI.mean", "coef.var")
-descriptiveTable <- descriptiveTable[-which(rownames(descriptiveTable) %in% remove),]
+##### Dropped columns: `r cols`
 
-# display descriptive statistics
-knitr::kable(descriptiveTable,caption = "Descriptive Statistics for Numeric Features in the Raw Employee Data", row.names = TRUE, "html") %>%
+```{r, echo=TRUE}
+employeeDatRaw$Attrition <- as.numeric(employeeDatRaw$Attrition)-1
+
+# determine overall attrition rate
+attritionRate <- (sum(employeeDatRaw$Attrition) / nrow(employeeDatRaw)) * 100
+```
+
+## Attrition Rates (Competitor Analysis)
+
+##### Overall attrition rate for XYZ Company: `r attritionRate`%
+### Per Compdata Surveys & Consulting: Turnover Report 2017
+#### Attrition rates in 2017 for all industires: 13.5% voluntary and 18.5% overall.
+#### Attrition rates in 2017 for Healthcare: 15.9% voluntary and 20.5% overall.
+#### Attrition rates in 2017 for Manufacturing and Distribution: 11.1% voluntary and 17.0% overall.
+
+
+## Additional Information to Collect
+##### Voluntary/involuntary breakdown
+##### Better job/department breakdown for Research & Development
+
+```{r, echo=TRUE}
+# determine attrition rate by department
+AttritionByDept <- aggregate(employeeDatRaw$Attrition,by=list(Department=employeeDatRaw$Department),FUN=sum)
+SizeByDept <- count(employeeDatRaw,"Department")
+attritionRateByDept <- merge(AttritionByDept, SizeByDept, by="Department")
+attritionRateByDept$Rate <- (attritionRateByDept$x / attritionRateByDept$freq) * 100
+names(attritionRateByDept) <- c("Department", "Attrition", "PopulationSize", "AttritionRate")
+
+# display attrition by department
+knitr::kable(attritionRateByDept,caption = "Attrition Rates by Department", row.names = TRUE, "html") %>%
+  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
+
+# determine attrition rate by job role
+attritionByJobRole <- aggregate(employeeDatRaw$Attrition, by=list(JobRole=employeeDatRaw$JobRole), FUN=sum)
+names(attritionByJobRole) <- c("JobRole","Attrition")
+satisfactionByJobRole <- aggregate(employeeDatRaw$JobSatisfaction, by=list(JobRole=employeeDatRaw$JobRole), FUN=stat.desc)
+# sizeByJobRole <- count(employeeDatRaw,"JobRole")
+attritionRateByJobRole <- cbind(attritionByJobRole, satisfactionByJobRole$x)
+attritionRateByJobRole$AttritionRate <- (attritionRateByJobRole$Attrition / attritionRateByJobRole$nbr.val) * 100
+drop_columns <- c("nbr.null","nbr.na","range","sum","SE.mean","CI.mean.0.95","coef.var")
+attritionRateByJobRole <- attritionRateByJobRole[ , !(names(attritionRateByJobRole) %in% drop_columns)]
+ 
+names(attritionRateByJobRole) <- c("JobRole", "Attrition", "PopulationSize", "SatMin", "SatMax", "SatMedian","SatMean","SatVar","SatStdDev","AttritionRate")
+
+
+# display attrition rate by job role
+knitr::kable(attritionRateByJobRole,caption = "Attrition Rates by Job Role, Including Job Satisfaction Statistics", row.names = TRUE, "html") %>%
   kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
 
 ```
+
+
+# Exploratory Data Analysis
+``` {r MannyEDA, echo=TRUE,fig.height = 16, fig.width = 10, fig.align="center"}
+# descriptive statistics, load into new data frame for processing
+descriptiveTable <- pastecs::stat.desc(employeeDatRaw)
+
+# remove non-numeric features
+charCols <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime")
+continuousTable.stats <- descriptiveTable[,!(colnames(descriptiveTable) %in% charCols)]
+categoricalTable <- employeeDatRaw[,(colnames(descriptiveTable) %in% charCols)]
+continuousTable <- employeeDatRaw[,!(colnames(employeeDatRaw) %in% charCols)]
+
+# remove rows for certain descriptive statistics leaving: N, Mean, Median, Std Dev, Var, Min, Max
+remove <- c("CI.mean.0.95", "nbr.val", "nbr.null", "nbr.na", "range", "sum", "SE.mean", "CI.mean", "coef.var")
+continuousTable.stats <- continuousTable.stats[-which(rownames(continuousTable.stats) %in% remove),]
+
+# round all numeric values to 2 decimal points
+continuousTable.stats <- round(continuousTable.stats, 2)
+continuousTable.transposed <- t(continuousTable.stats) # object becomes matrix
+
+# display descriptive statistics
+knitr::kable(continuousTable.transposed,caption = "Descriptive Statistics for Numeric Features in the Raw Employee Data", row.names = TRUE, "html") %>%
+  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"), full_width = F)
+
+summary(categoricalTable)
+
+head(melt(continuousTable))
+
+ggplot(data = melt(continuousTable), mapping = aes(x = value)) + 
+  geom_histogram(bins = 10) + facet_wrap(~variable, scales = 'free', ncol = 4) + 
+  labs(title="Faceted Histogrms for Continuous Variabls", title_x="", title_y="")
+
+ 
+```
+
+<!--
+# ```{r, echo=TRUE}
+# 
+# # descriptive statistics, load into new data frame for processing
+# descriptiveTable <- stat.desc(employeeDatRaw)
+# 
+# # remove non-numeric features
+# dropcolumns <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime")
+# descriptiveTable <- descriptiveTable[,!(colnames(descriptiveTable) %in% dropcolumns)]
+# 
+# # round all numeric values to 2 decimal points
+# descriptiveTable <- round(descriptiveTable, 2)
+# 
+# # remove rows for statistics we don't care about, leaving: N, Mean, Median, Std Dev, Var, Min, Max
+# remove <- c("CI.mean.0.95", "nbr.val", "nbr.null", "nbr.na", "range", "sum", "SE.mean", "CI.mean", "coef.var")
+# descriptiveTable <- descriptiveTable[-which(rownames(descriptiveTable) %in% remove),]
+# 
+# # display descriptive statistics
+# knitr::kable(descriptiveTable,caption = "Descriptive Statistics for Numeric Features in the Raw Employee Data", row.names = TRUE, "html") %>%
+#   kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
+# 
+# ```
+-->
 
 # Principal Components Analysis
 
@@ -81,6 +213,8 @@ summary(employee_PCA)
 ```{r, echo=TRUE, fig.width=15, fig.height=10}
 # plot PCs using ggbiplot
 ggbiplot(employee_PCA, obs.scale=1, var.scale=1, groups=employeeDatPCA$Attrition, ellipse=TRUE, circle=TRUE) + theme(legend.position='top') + scale_color_discrete()
+
+biplot(employee_PCA) # Base R
 ```
 
 # Exploring Attrition with Binomial Logistic Regression
