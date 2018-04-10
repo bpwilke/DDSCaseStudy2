@@ -7,13 +7,14 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(plyr)
 library(kableExtra) # to make uber sexy tables for output
 library(ggbiplot) # implementation of biplot using ggplot2 for plotting PCs
 library(Amelia) # cool library for exploring missing data
 library(pastecs) # for easy descriptive statistics
 library(ROCR) # for ROC plots and AUC calculations
 # turn off scientfic notation for the entire script
-options(scipen = 999)
+options(scipen = 999, digits=2)
 
 ```
 
@@ -39,16 +40,9 @@ numNAs <- sum(apply(employeeDatRaw,2,is.na))
 #### Columns with no variation have no impact on attrition. Dropping . . .
 
 ```{r, echo=TRUE}
-zeroVariation <- function(x) {
- if (length(unique(x)) == 1)
- {
-        return(TRUE)
- }
- return(FALSE)
-}
 
 # look for and drop columns with no variation
-drop_columns <- which(apply(employeeDatRaw, 2, zeroVariation))
+drop_columns <- which(apply(employeeDatRaw, 2, function(x) (length(unique(x)) == 1)))
 cols <- names(drop_columns)
 employeeDatRaw <- employeeDatRaw[,-drop_columns]
 
@@ -56,11 +50,62 @@ employeeDatRaw <- employeeDatRaw[,-drop_columns]
 factor_columns <- names(which(sapply(names(employeeDatRaw),function(x) class(employeeDatRaw[[x]])=="factor")))
 
 # convert factors to numeric
-employeeDatRaw[,factor_columns] <- sapply(factor_columns,function(x) as.numeric(employeeDatRaw[[x]]))
+# employeeDatRaw[,factor_columns] <- sapply(factor_columns,function(x) as.numeric(employeeDatRaw[[x]])-1)
 ```
 
 ##### Dropped columns: `r cols`
-##### Factor columns: `r factor_columns`
+
+```{r, echo=TRUE}
+employeeDatRaw$Attrition <- as.numeric(employeeDatRaw$Attrition)-1
+
+# determine overall attrition rate
+attritionRate <- (sum(employeeDatRaw$Attrition) / nrow(employeeDatRaw)) * 100
+```
+
+## Attrition Rates (Competitor Analysis)
+
+##### Overall attrition rate for XYZ Company: `r attritionRate`%
+### Per Compdata Surveys & Consulting: Turnover Report 2017
+#### Attrition rates in 2017 for all industires: 13.5% voluntary and 18.5% overall.
+#### Attrition rates in 2017 for Healthcare: 15.9% voluntary and 20.5% overall.
+#### Attrition rates in 2017 for Manufacturing and Distribution: 11.1% voluntary and 17.0% overall.
+
+
+## Additional Information to Collect
+##### Voluntary/involuntary breakdown
+##### Better job/department breakdown for Research & Development
+
+```{r, echo=TRUE}
+# determine attrition rate by department
+AttritionByDept <- aggregate(employeeDatRaw$Attrition,by=list(Department=employeeDatRaw$Department),FUN=sum)
+SizeByDept <- count(employeeDatRaw,"Department")
+attritionRateByDept <- merge(AttritionByDept, SizeByDept, by="Department")
+attritionRateByDept$Rate <- (attritionRateByDept$x / attritionRateByDept$freq) * 100
+names(attritionRateByDept) <- c("Department", "Attrition", "PopulationSize", "AttritionRate")
+
+# display attrition by department
+knitr::kable(attritionRateByDept,caption = "Attrition Rates by Department", row.names = TRUE, "html") %>%
+  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
+
+# determine attrition rate by job role
+attritionByJobRole <- aggregate(employeeDatRaw$Attrition, by=list(JobRole=employeeDatRaw$JobRole), FUN=sum)
+names(attritionByJobRole) <- c("JobRole","Attrition")
+satisfactionByJobRole <- aggregate(employeeDatRaw$JobSatisfaction, by=list(JobRole=employeeDatRaw$JobRole), FUN=stat.desc)
+# sizeByJobRole <- count(employeeDatRaw,"JobRole")
+attritionRateByJobRole <- cbind(attritionByJobRole, satisfactionByJobRole$x)
+attritionRateByJobRole$AttritionRate <- (attritionRateByJobRole$Attrition / attritionRateByJobRole$nbr.val) * 100
+drop_columns <- c("nbr.null","nbr.na","range","sum","SE.mean","CI.mean.0.95","coef.var")
+attritionRateByJobRole <- attritionRateByJobRole[ , !(names(attritionRateByJobRole) %in% drop_columns)]
+ 
+names(attritionRateByJobRole) <- c("JobRole", "Attrition", "PopulationSize", "SatMin", "SatMax", "SatMedian","SatMean","SatVar","SatStdDev","AttritionRate")
+
+
+# display attrition rate by job role
+knitr::kable(attritionRateByJobRole,caption = "Attrition Rates by Job Role, Including Job Satisfaction Statistics", row.names = TRUE, "html") %>%
+  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
+
+```
+
 
 # Exploratory Data Analysis
 
