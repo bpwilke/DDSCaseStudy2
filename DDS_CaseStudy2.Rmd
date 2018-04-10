@@ -2,10 +2,27 @@
 title: "DDSCaseStudy2"
 author: "Benjamin Wilke, Manny Rosales, Amy Paschal"
 date: "April 2, 2018"
-output: html_document
+output:
+  html_document:
+    keep_md: true
 ---
-
 ```{r setup, include=FALSE}
+# Load necessary packages and ensure they are active
+load.lib = c("kableExtra","ggplot2","Amelia","pastecs","ROCR","reshape2","devtools")
+
+install.lib = load.lib[!load.lib %in% installed.packages()]
+for(lib in install.lib){
+  install.packages(lib,dependences=TRUE)
+} 
+
+ggbi <- "ggbiplot"
+if (!ggbi %in% installed.packages()){
+  install_github("vqv/ggbiplot") # Not on CRAN, must install via GitHub using devtools package
+} 
+
+load.lib = c(load.lib,"ggbiplot")
+sapply(load.lib,require,character=TRUE)
+
 knitr::opts_chunk$set(echo = TRUE)
 library(plyr)
 library(kableExtra) # to make uber sexy tables for output
@@ -16,7 +33,23 @@ library(ROCR) # for ROC plots and AUC calculations
 # turn off scientfic notation for the entire script
 options(scipen = 999, digits=2)
 
+
+# Turn off scientfic notation for the entire script
+options(scipen = 999)
 ```
+
+<!--
+#```{r setup, include=FALSE}
+#knitr::opts_chunk$set(echo = TRUE)
+#library(kableExtra) # to make uber sexy tables for output
+#library(ggbiplot) # implementation of biplot using ggplot2 for plotting PCs
+#library(Amelia) # cool library for exploring missing data
+#library(pastecs) # for easy descriptive statistics
+#library(ROCR) # for ROC plots and AUC calculations
+# turn off scientfic notation for the entire script
+#options(scipen = 999)
+#```
+-->
 
 ## Introduction
 
@@ -26,6 +59,7 @@ employeeDatRaw <- read.csv('CaseStudy2data.csv', header=TRUE)
 ```
 
 
+
 ## Data Cleanup and Conversion
 
 #### Checking for missing data values . . .
@@ -33,7 +67,9 @@ employeeDatRaw <- read.csv('CaseStudy2data.csv', header=TRUE)
 ```{r, echo=TRUE}
 # check for missing data values
 numNAs <- sum(apply(employeeDatRaw,2,is.na))
+
 ```
+-->
 
 ##### Number of missing data values = `r numNAs`
 
@@ -108,28 +144,62 @@ knitr::kable(attritionRateByJobRole,caption = "Attrition Rates by Job Role, Incl
 
 
 # Exploratory Data Analysis
-
-```{r, echo=TRUE}
-
+``` {r MannyEDA, echo=TRUE,fig.height = 16, fig.width = 10, fig.align="center"}
 # descriptive statistics, load into new data frame for processing
-descriptiveTable <- stat.desc(employeeDatRaw)
+descriptiveTable <- pastecs::stat.desc(employeeDatRaw)
 
 # remove non-numeric features
-dropcolumns <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime")
-descriptiveTable <- descriptiveTable[,!(colnames(descriptiveTable) %in% dropcolumns)]
+charCols <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime")
+continuousTable.stats <- descriptiveTable[,!(colnames(descriptiveTable) %in% charCols)]
+categoricalTable <- employeeDatRaw[,(colnames(descriptiveTable) %in% charCols)]
+continuousTable <- employeeDatRaw[,!(colnames(employeeDatRaw) %in% charCols)]
+
+# remove rows for certain descriptive statistics leaving: N, Mean, Median, Std Dev, Var, Min, Max
+remove <- c("CI.mean.0.95", "nbr.val", "nbr.null", "nbr.na", "range", "sum", "SE.mean", "CI.mean", "coef.var")
+continuousTable.stats <- continuousTable.stats[-which(rownames(continuousTable.stats) %in% remove),]
 
 # round all numeric values to 2 decimal points
-descriptiveTable <- round(descriptiveTable, 2)
-
-# remove rows for statistics we don't care about, leaving: N, Mean, Median, Std Dev, Var, Min, Max
-remove <- c("CI.mean.0.95", "nbr.val", "nbr.null", "nbr.na", "range", "sum", "SE.mean", "CI.mean", "coef.var")
-descriptiveTable <- descriptiveTable[-which(rownames(descriptiveTable) %in% remove),]
+continuousTable.stats <- round(continuousTable.stats, 2)
+continuousTable.transposed <- t(continuousTable.stats) # object becomes matrix
 
 # display descriptive statistics
-knitr::kable(descriptiveTable,caption = "Descriptive Statistics for Numeric Features in the Raw Employee Data", row.names = TRUE, "html") %>%
-  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
+knitr::kable(continuousTable.transposed,caption = "Descriptive Statistics for Numeric Features in the Raw Employee Data", row.names = TRUE, "html") %>%
+  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"), full_width = F)
 
+summary(categoricalTable)
+
+head(melt(continuousTable))
+
+ggplot(data = melt(continuousTable), mapping = aes(x = value)) + 
+  geom_histogram(bins = 10) + facet_wrap(~variable, scales = 'free', ncol = 4) + 
+  labs(title="Faceted Histogrms for Continuous Variabls", title_x="", title_y="")
+
+ 
 ```
+
+<!--
+# ```{r, echo=TRUE}
+# 
+# # descriptive statistics, load into new data frame for processing
+# descriptiveTable <- stat.desc(employeeDatRaw)
+# 
+# # remove non-numeric features
+# dropcolumns <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime")
+# descriptiveTable <- descriptiveTable[,!(colnames(descriptiveTable) %in% dropcolumns)]
+# 
+# # round all numeric values to 2 decimal points
+# descriptiveTable <- round(descriptiveTable, 2)
+# 
+# # remove rows for statistics we don't care about, leaving: N, Mean, Median, Std Dev, Var, Min, Max
+# remove <- c("CI.mean.0.95", "nbr.val", "nbr.null", "nbr.na", "range", "sum", "SE.mean", "CI.mean", "coef.var")
+# descriptiveTable <- descriptiveTable[-which(rownames(descriptiveTable) %in% remove),]
+# 
+# # display descriptive statistics
+# knitr::kable(descriptiveTable,caption = "Descriptive Statistics for Numeric Features in the Raw Employee Data", row.names = TRUE, "html") %>%
+#   kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
+# 
+# ```
+-->
 
 # Principal Components Analysis
 
@@ -151,6 +221,8 @@ summary(employee_PCA)
 ```{r, echo=TRUE, fig.width=15, fig.height=10}
 # plot PCs using ggbiplot
 ggbiplot(employee_PCA, obs.scale=1, var.scale=1, groups=employeeDatPCA$Attrition, ellipse=TRUE, circle=TRUE) + theme(legend.position='top') + scale_color_discrete()
+
+biplot(employee_PCA) # Base R
 ```
 
 
