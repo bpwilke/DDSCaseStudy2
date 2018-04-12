@@ -745,10 +745,11 @@ continuousTable$StandardHours <- NULL
 facetPlot <- melt(continuousTable, id.vars = "Attrition")
 
 p <- ggplot(data = facetPlot, aes(x = value, fill=Attrition)) + 
-    geom_histogram(bins = 10) + 
+    geom_histogram(bins = 10, colour = "black") + 
     facet_wrap(~variable, scales = 'free', ncol = 4) + 
-    labs(title="Faceted Histogrms for Continuous Variabls", title_x="", title_y="") 
-
+    labs(title="Faceted Histogrms for Continuous Variabls", title_x="", title_y="") +
+    scale_fill_manual(values = c("darkgrey","red")) 
+    
 p  
 ```
 
