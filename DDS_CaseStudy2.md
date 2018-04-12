@@ -754,8 +754,14 @@ p
 ```
 
 <img src="DDS_CaseStudy2_files/figure-html/MannyEDA-1.png" style="display: block; margin: auto;" />
+## rmd not showing correct image, below just showing an export as a backup
 
+![Backup](https://github.com/bpwilke/DDSCaseStudy2/blob/MannyWorking2/DDS_CaseStudy2_files/ImageBackup.png)
 
+![Backup2][image]
+[image]:https://github.com/bpwilke/DDSCaseStudy2/blob/MannyWorking2/DDS_CaseStudy2_files/ImageBackup.png
+
+![Backup3](DDS_CaseStudy2_files/ImageBackup.png)
 
 <!--
 # ```{r, echo=TRUE}
