@@ -142,15 +142,24 @@ names(attritionRateByGender) <- c("Gender", "Attrition", "PopulationSize", "Attr
 knitr::kable(attritionRateByGender,caption = "Attrition Rates by Gender", row.names = FALSE, "html") %>%
   kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
 
+ageBin <- function(x) {
+  if (x < 25) return ("< 25")
+  if (x < 35) return ("25-35")
+  if (x < 45) return ("35-45")
+  if (x < 55) return ("45-55")
+  return("55 and >")
+}
 # determine attrition rate by age
-attritionByAge <- aggregate(employeeDatRaw$Attrition, by=list(Age=employeeDatRaw$Age), FUN=sum)
-sizeByAge <- count(employeeDatRaw,"Age")
-attritionRateByAge <- merge(attritionByAge, sizeByAge, by="Age")
+attritionRaw <- employeeDatRaw
+attritionRaw$AgeBin <- sapply(attritionRaw$Age, ageBin)
+attritionByAge <- aggregate(attritionRaw$Attrition, by=list(AgeBin=attritionRaw$AgeBin), FUN=sum)
+sizeByAge <- count(attritionRaw,"AgeBin")
+attritionRateByAge <- merge(attritionByAge, sizeByAge, by="AgeBin")
 attritionRateByAge$Rate <- (attritionRateByAge$x / attritionRateByAge$freq) * 100
-names(attritionRateByAge) <- c("Age", "Attrition", "PopulationSize", "AttritionRate")
+names(attritionRateByAge) <- c("AgeRange", "Attrition", "PopulationSize", "AttritionRate")
 
-# display attrition rate by age
-knitr::kable(attritionRateByAge,caption = "Attrition Rates by Age", row.names = FALSE, "html") %>%
+# display attrition rate by age range
+knitr::kable(attritionRateByAge,caption = "Attrition Rates by Age Range", row.names = FALSE, "html") %>%
   kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
 ```
 ## Additional Information to Collect
