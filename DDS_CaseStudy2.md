@@ -31,6 +31,12 @@ knitr::kable(NAdataframe, caption = "Counts of NAs (Missing Values) in Raw Data"
 
 <table class="table table-striped table-hover table-condensed" style="width: auto !important; ">
 <caption>Counts of NAs (Missing Values) in Raw Data</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:right;"> x </th>
+  </tr>
+ </thead>
 <tbody>
   <tr>
    <td style="text-align:left;"> Age </td>
@@ -436,6 +442,13 @@ knitr::kable(attritionRateByJobRole,caption = "Attrition Rates by Job Role, Incl
 
 # Exploratory Data Analysis
 
+From the data provided we can clearly see that there is a subset of variabes that are continuous and another that are categorical. In order to better understand the distribution and skew of the continuous numerical columns a set of faceted histograms was generated. Other than Age which appears normaly distributed, it is clear that most columns are right skewed. Each factor for the categorical columns is summarized in a review. One of the more interesting distributions include YearsSinceLastPromotion, the large right skew could indicate a significant factor associated with attrition. 
+
+We also notice from the data that EmployeeCount and StandardHours are the same value for all employees and are not meaningful variables. Similarly, EmployeeNumber does not produce any meaingful information given that each employee has a unique EmployeeNumber.
+
+When incorporating Attrition into the histograms it appears that those with more YearsAtCompany are less likely to leave the company. A similar trend is obsered with MonthlyIncome, the larger the MonthlyIncome the less Attrition is observed. Finally those with a higher JobLevel also appear to have less attrition than those with lower JobLevel values.
+
+
 ```r
 # descriptive statistics, load into new data frame for processing
 descriptiveTable <- pastecs::stat.desc(employeeDatRaw)
@@ -724,34 +737,24 @@ summary(categoricalTable)
 ```
 
 ```r
-head(melt(continuousTable))
-```
+continuousTable$Attrition <- employeeDatRaw$Attrition
+continuousTable$EmployeeCount <- NULL
+continuousTable$EmployeeNumber <- NULL
+continuousTable$StandardHours <- NULL
 
-```
-## No id variables; using all as measure variables
-```
+facetPlot <- melt(continuousTable, id.vars = "Attrition")
 
-```
-##   variable value
-## 1      Age    41
-## 2      Age    49
-## 3      Age    37
-## 4      Age    33
-## 5      Age    27
-## 6      Age    32
-```
+p <- ggplot(data = facetPlot, aes(x = value, fill=Attrition)) + 
+    geom_histogram(bins = 10) + 
+    facet_wrap(~variable, scales = 'free', ncol = 4) + 
+    labs(title="Faceted Histogrms for Continuous Variabls", title_x="", title_y="") 
 
-```r
-ggplot(data = melt(continuousTable), mapping = aes(x = value)) + 
-  geom_histogram(bins = 10) + facet_wrap(~variable, scales = 'free', ncol = 4) + 
-  labs(title="Faceted Histogrms for Continuous Variabls", title_x="", title_y="")
-```
-
-```
-## No id variables; using all as measure variables
+p  
 ```
 
 <img src="DDS_CaseStudy2_files/figure-html/MannyEDA-1.png" style="display: block; margin: auto;" />
+
+
 
 <!--
 # ```{r, echo=TRUE}
@@ -826,7 +829,7 @@ summary(employee_PCA)
 ```
 
 ```
-## Importance of components%s:
+## Importance of components:
 ##                          PC1    PC2    PC3    PC4    PC5   PC6   PC7
 ## Standard deviation     2.158 1.3551 1.3250 1.1006 1.0677 1.040 1.028
 ## Proportion of Variance 0.194 0.0765 0.0732 0.0505 0.0475 0.045 0.044
