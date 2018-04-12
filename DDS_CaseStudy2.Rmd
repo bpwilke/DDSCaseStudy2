@@ -180,7 +180,8 @@ p <- ggplot(data = facetPlot, aes(x = value, fill=Attrition)) +
     labs(title="Faceted Histogrms for Continuous Variabls", title_x="", title_y="") +
     scale_fill_manual(values = c("darkgrey","red")) 
     
-p  
+# p  rmd not showing correct image below just showing an export
+![Alt text](~/ImageBackup.png)
 ```
 
 
