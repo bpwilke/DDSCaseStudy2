@@ -169,54 +169,6 @@ ggplot(data = melt(continuousTable), mapping = aes(x = value)) +
  
 ```
 
-<!--
-# ```{r, echo=TRUE}
-# 
-# # descriptive statistics, load into new data frame for processing
-# descriptiveTable <- stat.desc(employeeDatRaw)
-# 
-# # remove non-numeric features
-# dropcolumns <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime")
-# descriptiveTable <- descriptiveTable[,!(colnames(descriptiveTable) %in% dropcolumns)]
-# 
-# # round all numeric values to 2 decimal points
-# descriptiveTable <- round(descriptiveTable, 2)
-# 
-# # remove rows for statistics we don't care about, leaving: N, Mean, Median, Std Dev, Var, Min, Max
-# remove <- c("CI.mean.0.95", "nbr.val", "nbr.null", "nbr.na", "range", "sum", "SE.mean", "CI.mean", "coef.var")
-# descriptiveTable <- descriptiveTable[-which(rownames(descriptiveTable) %in% remove),]
-# 
-# # display descriptive statistics
-# knitr::kable(descriptiveTable,caption = "Descriptive Statistics for Numeric Features in the Raw Employee Data", row.names = TRUE, "html") %>%
-#   kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
-# 
-# ```
--->
-
-# Principal Components Analysis
-
-```{r, echo=TRUE}
-# remove non-numeric features, and features with zero variance
-dropcolumnsPCA <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime", "EmployeeCount", "StandardHours")
-employeeDatPCA <- employeeDatRaw[,!(colnames(employeeDatRaw) %in% dropcolumnsPCA)]
-
-# perform PCA
-employee_PCA <- prcomp(employeeDatPCA, center=TRUE, scale.=TRUE)
-
-# print principal components (only the first 4 PCs)
-print(employee_PCA$rotation[,1:4])
-
-# summary of principal components
-summary(employee_PCA)
-```
-
-```{r, echo=TRUE, fig.width=15, fig.height=10}
-# plot PCs using ggbiplot
-ggbiplot(employee_PCA, obs.scale=1, var.scale=1, groups=employeeDatPCA$Attrition, ellipse=TRUE, circle=TRUE) + theme(legend.position='top') + scale_color_discrete()
-
-biplot(employee_PCA) # Base R
-```
-
 # Exploring Attrition with Binomial Logistic Regression
 
 Binomial logistic regression is a special form of mutiple regression that is used to model a dichotomous outcome. In our case, this outcome is whether an employee left the company or is still a current employee.
@@ -278,27 +230,27 @@ misClasificError <- mean(fittedresults != test$Attrition, na.rm=TRUE) # this add
 print(paste('Accuracy',1-misClasificError))
 ```
 
-The model already exhibits very high predictive capability (86.4%), but we will now refit the model using only variables with signficance from the full model. This done to simplify the model for interpretation and to reduce potential multicolinearity issues.
+The model already exhibits very high predictive capability (86.4%), but we will now refit the model using only variables with signficance from the full model. This is done to simplify the model for interpretation and to reduce potential multicolinearity issues.
 
 The model will be fit with the following features:
 
-BusinessTravel
-DistanceFromHome
-EnvironmentSatisfaction
-Gender
-JobInvolvement
-JobRole (??)
-JobSatisfaction
-MaritalStatus
-NumCompaniesWorked
-OverTime
-RelationshipSatisfaction
-TotalWorkingYears
-TrainingTimesLastYear
-WorkLifeBalance
-YearsAtCompany
-YearsInCurrentRole
-YearsSinceLastPromotion
+BusinessTravel<br>
+DistanceFromHome<br>
+EnvironmentSatisfaction<br>
+Gender<br>
+JobInvolvement<br>
+JobRole<br>
+JobSatisfaction<br>
+MaritalStatus<br>
+NumCompaniesWorked<br>
+OverTime<br>
+RelationshipSatisfaction<br>
+TotalWorkingYears<br>
+TrainingTimesLastYear<br>
+WorkLifeBalance<br>
+YearsAtCompany<br>
+YearsInCurrentRole<br>
+YearsSinceLastPromotion<br>
 YearsWithCurrManager
 
 ```{r, echo=TRUE}
@@ -355,14 +307,12 @@ misClasificError <- mean(fittedresults != test$Attrition, na.rm=TRUE) # this add
 print(paste('Accuracy',1-misClasificError))
 ```
 
-The predictive capability of this reduced model improved slightly and has now been simplifed quite a bit in terms of the number of features.
+The predictive capability of this reduced model improved slightly to 88.77% and has now been simplifed quite a bit in terms of the number of features.
 
+# Using GLMNET and Cross-Validation for Feature Selection of Logistic Regression
 
+Our earlier approach was to intuitively select features from the data that represented statistical and practical significance to the question of interest. In this section we will employ an automated feature selection tool that leverages LASSO (Least Absolute Shrinkage and Selection Operator) and cross-validation to select important features in the model. 
 
-
-
-
-# Using GLMNET for Feature Selection of Logistic Regression
 ```{r, echo=TRUE}
 employee_logistic <- employeeDatRaw
 dropcolumns <- c("EmployeeCount", "StandardHours", "Over18") # removing these again, because they can't be used in the model
@@ -408,10 +358,46 @@ GLMTrain.x <- GLMTrain.x[,!(colnames(GLMTrain.x) %in% dropcolumns)]
 GLMTrain.x <- as.matrix(data.frame(GLMTrain.x, GLMTrain.xfactors))
 
 # use glmnet to fit a binomial logistic regression
-glmnetfit <- glmnet(GLMTrain.x, GLMTrain.y, family = "binomial")
+glmnetfit <- cv.glmnet(GLMTrain.x, GLMTrain.y, family = "binomial", alpha=1)
 
 plot(glmnetfit)
+```
 
+The above plot shows us that the optimal value of lambda in the LASSO model (the value that minimizes the mean square error) is approximately -5.75. We want to provide the smallest number of coeffecients, but also give good accuracy. For this, we will use the value of lambda that lies within one standard error of the optimal value of lamda to display those coeffecients that are significant.
+
+```{r, echo=TRUE}
+lambda_lse <- glmnetfit$lambda.1se
+coef(glmnetfit, s=lambda_lse)
+```
+
+These significant coeffecients are:
+
+Age<br>
+DistanceFromHome<br>
+EnvironmentSatisfaction<br>
+JobInvolvement<br>
+JobSatisfaction<br>
+MonthlyIncome<br>
+NumCompaniesWorked<br>
+RelationshipSatisfaction<br>
+StockOptionLevel<br>
+TotalWorkingYears<br>
+TrainingTimesLastYear<br>
+WorkLifeBalance<br>
+YearsInCurrentRole<br>
+YearsSinceLastPromotion<br>
+YearsWithCurrManager<br>
+Department<br>
+EducationField<br>
+JobRole<br>
+MaritalStatus<br>
+OverTimeYes<br>
+
+This is 20 total features, which is actually 2 more than our reduced model!
+
+We will proceed to test the predictive capability of this model like we've done before using the 20% of testing data.
+
+```{r, echo=TRUE}
 # # # START Prediction from GLMNET fit model # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 # prepare the test data in a similar manner for GLMNET usage (create dummy variables, matrix, etc.)
@@ -446,18 +432,31 @@ print(paste('Accuracy',1-misClasificError))
 
 ```
 
+This model exhibits less predictive capability on the hold out test set (86.39% accuracy). For this reason, we will use the reduced model as our final recommendation for predicting attrition. These features included:
+
+BusinessTravel<br>
+DistanceFromHome<br>
+EnvironmentSatisfaction<br>
+Gender<br>
+JobInvolvement<br>
+JobRole<br>
+JobSatisfaction<br>
+MaritalStatus<br>
+NumCompaniesWorked<br>
+OverTime<br>
+RelationshipSatisfaction<br>
+TotalWorkingYears<br>
+TrainingTimesLastYear<br>
+WorkLifeBalance<br>
+YearsAtCompany<br>
+YearsInCurrentRole<br>
+YearsSinceLastPromotion<br>
+YearsWithCurrManager
 
 
+# ROC Curve for our Final (Reduced) Predictive Model
 
-
-
-
-
-
-
-
-
-and now some ROC curves...
+An ROC curve is a graphical plot that illustrates the diagnostic ability of a binary classifier system like our logistic regression model. The curve is created by plotting the true positive rate (TPR) against the false positive rate (FPR)
 
 ```{r, echo=TRUE}
 #Create ROC curves
