@@ -8,7 +8,7 @@ output:
 ---
 ```{r setup, include=FALSE}
 # Load necessary packages and ensure they are active
-load.lib = c("kableExtra","ggplot2","Amelia","pastecs","ROCR","reshape2","devtools")
+load.lib = c("kableExtra","ggplot2","Amelia","pastecs","ROCR","reshape2","devtools","glmnet")
 
 install.lib = load.lib[!load.lib %in% installed.packages()]
 for(lib in install.lib){
@@ -29,7 +29,6 @@ library(kableExtra) # to make uber sexy tables for output
 library(ggbiplot) # implementation of biplot using ggplot2 for plotting PCs
 library(pastecs) # for easy descriptive statistics
 library(ROCR) # for ROC plots and AUC calculations
-
 library(glmnet)
 # turn off scientfic notation for the entire script
 options(scipen = 999, digits=2)
@@ -78,32 +77,38 @@ employeeDatRaw <- employeeDatRaw[,-drop_columns]
 factor_columns <- names(which(sapply(names(employeeDatRaw),function(x) class(employeeDatRaw[[x]])=="factor")))
 
 # convert factors to numeric
-# employeeDatRaw[,factor_columns] <- sapply(factor_columns,function(x) as.numeric(employeeDatRaw[[x]])-1)
+#employeeDatRaw[,factor_columns] <- sapply(factor_columns,function(x) as.numeric(employeeDatRaw[[x]])-1)
+employeeDatRaw$Attrition <- as.numeric(employeeDatRaw$Attrition)-1
 ```
 
 ##### Dropped columns: `r cols`
-
-```{r, echo=TRUE}
-employeeDatRaw$Attrition <- as.numeric(employeeDatRaw$Attrition)-1
-
-# determine overall attrition rate
-attritionRate <- (sum(employeeDatRaw$Attrition) / nrow(employeeDatRaw)) * 100
-```
+##### Factors converted to numeric: `r factor_columns`
 
 ## Attrition Rates (Competitor Analysis)
 
-##### Overall attrition rate for XYZ Company: `r attritionRate`%
-### Per Compdata Surveys & Consulting: Turnover Report 2017
-#### Attrition rates in 2017 for all industires: 13.5% voluntary and 18.5% overall.
-#### Attrition rates in 2017 for Healthcare: 15.9% voluntary and 20.5% overall.
-#### Attrition rates in 2017 for Manufacturing and Distribution: 11.1% voluntary and 17.0% overall.
+```{r, echo=TRUE}
 
+# determine overall attrition rate
+attritionRate <- (sum(employeeDatRaw$Attrition) / nrow(employeeDatRaw)) * 100
 
-## Additional Information to Collect
-##### Voluntary/involuntary breakdown
-##### Better job/department breakdown for Research & Development
+ind <- c("Overall","Healthcare","Manufacturing")
+vol <- c(13.5, 15.9, 11.1)
+invol <- c(18.5, 20.5, 17.0)
+industryRates <- data.frame(ind,vol,invol)
+names(industryRates) <- c("Industry", "Voluntary(%)", "Involuntary(%)")
+
+# display industry attrition
+knitr::kable(industryRates, caption = "Attrition Rates. Per Compdata Surveys & Consulting's Turnover Report 2017", row.names = FALSE, "html") %>%
+  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
+```
+##### reference: http://blog.compdatasurveys.com/employee-turnover-trends-in-2017
+
+## Attrition Rates (XYZ Company)
+
+##### Overall attrition rate: `r attritionRate`%
 
 ```{r, echo=TRUE}
+
 # determine attrition rate by department
 AttritionByDept <- aggregate(employeeDatRaw$Attrition,by=list(Department=employeeDatRaw$Department),FUN=sum)
 SizeByDept <- count(employeeDatRaw,"Department")
@@ -112,28 +117,54 @@ attritionRateByDept$Rate <- (attritionRateByDept$x / attritionRateByDept$freq) *
 names(attritionRateByDept) <- c("Department", "Attrition", "PopulationSize", "AttritionRate")
 
 # display attrition by department
-knitr::kable(attritionRateByDept,caption = "Attrition Rates by Department", row.names = TRUE, "html") %>%
+knitr::kable(attritionRateByDept,caption = "Attrition Rates by Department", row.names = FALSE, "html") %>%
   kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
 
 # determine attrition rate by job role
 attritionByJobRole <- aggregate(employeeDatRaw$Attrition, by=list(JobRole=employeeDatRaw$JobRole), FUN=sum)
-names(attritionByJobRole) <- c("JobRole","Attrition")
-satisfactionByJobRole <- aggregate(employeeDatRaw$JobSatisfaction, by=list(JobRole=employeeDatRaw$JobRole), FUN=stat.desc)
-# sizeByJobRole <- count(employeeDatRaw,"JobRole")
-attritionRateByJobRole <- cbind(attritionByJobRole, satisfactionByJobRole$x)
-attritionRateByJobRole$AttritionRate <- (attritionRateByJobRole$Attrition / attritionRateByJobRole$nbr.val) * 100
-drop_columns <- c("nbr.null","nbr.na","range","sum","SE.mean","CI.mean.0.95","coef.var")
-attritionRateByJobRole <- attritionRateByJobRole[ , !(names(attritionRateByJobRole) %in% drop_columns)]
- 
-names(attritionRateByJobRole) <- c("JobRole", "Attrition", "PopulationSize", "SatMin", "SatMax", "SatMedian","SatMean","SatVar","SatStdDev","AttritionRate")
-
+sizeByRole <- count(employeeDatRaw,"JobRole")
+attritionRateByJobRole <- merge(attritionByJobRole,sizeByRole, by="JobRole")
+attritionRateByJobRole$Rate <- (attritionRateByJobRole$x / attritionRateByJobRole$freq) * 100
+names(attritionRateByJobRole) <- c("JobRole", "Attrition", "PopulationSize", "AttritionRate")
 
 # display attrition rate by job role
-knitr::kable(attritionRateByJobRole,caption = "Attrition Rates by Job Role, Including Job Satisfaction Statistics", row.names = TRUE, "html") %>%
+knitr::kable(attritionRateByJobRole,caption = "Attrition Rates by Job Role", row.names = FALSE, "html") %>%
   kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
 
-```
+# determine attrition rate by gender
+attritionByGender <- aggregate(employeeDatRaw$Attrition, by=list(Gender=employeeDatRaw$Gender), FUN=sum)
+sizeByGender <- count(employeeDatRaw,"Gender")
+attritionRateByGender <- merge(attritionByGender,sizeByGender, by="Gender")
+attritionRateByGender$Rate <- (attritionRateByGender$x / attritionRateByGender$freq) * 100
+names(attritionRateByGender) <- c("Gender", "Attrition", "PopulationSize", "AttritionRate")
 
+# display attrition rate by gender
+knitr::kable(attritionRateByGender,caption = "Attrition Rates by Gender", row.names = FALSE, "html") %>%
+  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
+
+ageBin <- function(x) {
+  if (x < 25) return ("< 25")
+  if (x < 35) return ("25-35")
+  if (x < 45) return ("35-45")
+  if (x < 55) return ("45-55")
+  return("55 and >")
+}
+# determine attrition rate by age
+attritionRaw <- employeeDatRaw
+attritionRaw$AgeBin <- sapply(attritionRaw$Age, ageBin)
+attritionByAge <- aggregate(attritionRaw$Attrition, by=list(AgeBin=attritionRaw$AgeBin), FUN=sum)
+sizeByAge <- count(attritionRaw,"AgeBin")
+attritionRateByAge <- merge(attritionByAge, sizeByAge, by="AgeBin")
+attritionRateByAge$Rate <- (attritionRateByAge$x / attritionRateByAge$freq) * 100
+names(attritionRateByAge) <- c("AgeRange", "Attrition", "PopulationSize", "AttritionRate")
+
+# display attrition rate by age range
+knitr::kable(attritionRateByAge,caption = "Attrition Rates by Age Range", row.names = FALSE, "html") %>%
+  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
+```
+## Additional Information to Collect
+##### Voluntary/involuntary breakdown
+##### Better job/department breakdown for Research & Development
 
 # Exploratory Data Analysis
 ``` {r MannyEDA, echo=TRUE,fig.height = 16, fig.width = 10, fig.align="center"}
