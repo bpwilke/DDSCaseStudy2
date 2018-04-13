@@ -177,7 +177,7 @@ facetPlot <- melt(continuousTable, id.vars = "Attrition")
 p <- ggplot(data = facetPlot, aes(x = value, fill=Attrition)) + 
     geom_histogram(bins = 10, colour = "black") + 
     facet_wrap(~variable, scales = 'free', ncol = 4) + 
-    labs(title="Faceted Histogrms for Continuous Variabls", title_x="", title_y="") +
+    labs(title="Faceted Histograms for Continuous Variables", title_x="", title_y="") +
     scale_fill_manual(values = c("darkgrey","red")) 
     
 p  
@@ -185,11 +185,6 @@ p
 ## rmd not showing correct image, below just showing an export as a backup
 
 ![Backup](https://github.com/bpwilke/DDSCaseStudy2/blob/MannyWorking2/DDS_CaseStudy2_files/ImageBackup.png)
-
-![Backup2][image]
-[image]:https://github.com/bpwilke/DDSCaseStudy2/blob/MannyWorking2/DDS_CaseStudy2_files/ImageBackup.png
-
-![Backup3](DDS_CaseStudy2_files/ImageBackup.png)
 
 <!--
 # ```{r, echo=TRUE}
