@@ -130,313 +130,20 @@ $(document).ready(function () {
 <pre class="r"><code># load raw data
 employeeDatRaw &lt;- read.csv('CaseStudy2data.csv', header=TRUE)</code></pre>
 </div>
-<div id="missing-values" class="section level1">
-<h1>Missing Values</h1>
-<p>Fortunately, this data is not missing any values as demonstrated by the table below.</p>
-<pre class="r"><code># calculate NAs for raw data
-NAdataframe &lt;- sapply(employeeDatRaw, function(x) sum(is.na(x)))
-# display NAs in kable table
-knitr::kable(NAdataframe, caption = &quot;Counts of NAs (Missing Values) in Raw Data&quot;, row.names = TRUE, &quot;html&quot;) %&gt;%
-  kable_styling(bootstrap_options = c(&quot;striped&quot;,&quot;hover&quot;,&quot;condensed&quot;), full_width=FALSE, position = &quot;left&quot;)</code></pre>
-<table class="table table-striped table-hover table-condensed" style="width: auto !important; ">
-<caption>
-Counts of NAs (Missing Values) in Raw Data
-</caption>
-<tbody>
-<tr>
-<td style="text-align:left;">
-Age
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Attrition
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-BusinessTravel
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-DailyRate
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Department
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-DistanceFromHome
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Education
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-EducationField
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-EmployeeCount
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-EmployeeNumber
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-EnvironmentSatisfaction
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Gender
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HourlyRate
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-JobInvolvement
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-JobLevel
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-JobRole
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-JobSatisfaction
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-MaritalStatus
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-MonthlyIncome
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-MonthlyRate
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-NumCompaniesWorked
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Over18
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-OverTime
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-PercentSalaryHike
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-PerformanceRating
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-RelationshipSatisfaction
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-StandardHours
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-StockOptionLevel
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-TotalWorkingYears
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-TrainingTimesLastYear
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-WorkLifeBalance
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-YearsAtCompany
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-YearsInCurrentRole
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-YearsSinceLastPromotion
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-YearsWithCurrManager
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-</tbody>
-</table>
 <div id="data-cleanup-and-conversion" class="section level2">
 <h2>Data Cleanup and Conversion</h2>
-<div id="checking-for-missing-data-values-.-.-." class="section level4">
-<h4>Checking for missing data values . . .</h4>
+<div id="checking-for-missing-data-values" class="section level4">
+<h4>Checking for missing data values</h4>
 <pre class="r"><code># check for missing data values
 numNAs &lt;- sum(apply(employeeDatRaw,2,is.na))</code></pre>
+<p>Fortunately, this data is not missing any values as demonstrated by the code ran above and output below.</p>
 <div id="number-of-missing-data-values-0" class="section level5">
 <h5>Number of missing data values = 0</h5>
 </div>
 </div>
-<div id="columns-with-no-variation-have-no-impact-on-attrition.-dropping-.-.-." class="section level4">
-<h4>Columns with no variation have no impact on attrition. Dropping . . .</h4>
+<div id="columns-with-no-variation-have-no-impact-on-attrition" class="section level4">
+<h4>Columns with no variation have no impact on attrition</h4>
+<p>We found several columns that don’t have any variation and will actually cause future model building to fail. The code below is used to identify and remove those colomns. We also convert the response Attrition to numeric for future use.</p>
 <pre class="r"><code># look for and drop columns with no variation
 drop_columns &lt;- which(apply(employeeDatRaw, 2, function(x) (length(unique(x)) == 1)))
 cols &lt;- names(drop_columns)
@@ -450,9 +157,6 @@ factor_columns &lt;- names(which(sapply(names(employeeDatRaw),function(x) class(
 employeeDatRaw$Attrition &lt;- as.numeric(employeeDatRaw$Attrition)-1</code></pre>
 <div id="dropped-columns-employeecount-over18-standardhours" class="section level5">
 <h5>Dropped columns: EmployeeCount, Over18, StandardHours</h5>
-</div>
-<div id="factors-converted-to-numeric-attrition-businesstravel-department-educationfield-gender-jobrole-maritalstatus-overtime" class="section level5">
-<h5>Factors converted to numeric: Attrition, BusinessTravel, Department, EducationField, Gender, JobRole, MaritalStatus, OverTime</h5>
 </div>
 </div>
 </div>
@@ -947,7 +651,6 @@ AttritionRate
 </div>
 <div id="better-jobdepartment-breakdown-for-research-development" class="section level5">
 <h5>Better job/department breakdown for Research &amp; Development</h5>
-</div>
 </div>
 </div>
 <div id="exploratory-data-analysis" class="section level1">
@@ -1593,7 +1296,7 @@ facetPlot &lt;- melt(continuousTable, id.vars = &quot;Attrition&quot;)
 p &lt;- ggplot(data = facetPlot, aes(x = value, fill=Attrition)) + 
     geom_histogram(bins = 10, colour = &quot;black&quot;) + 
     facet_wrap(~variable, scales = 'free', ncol = 4) + 
-    labs(title=&quot;Faceted Histogrms for Continuous Variabls&quot;, title_x=&quot;&quot;, title_y=&quot;&quot;) +
+    labs(title=&quot;Faceted Histograms for Continuous Variables&quot;, title_x=&quot;&quot;, title_y=&quot;&quot;) +
     scale_fill_manual(values = c(&quot;darkgrey&quot;,&quot;red&quot;)) 
     
 #p

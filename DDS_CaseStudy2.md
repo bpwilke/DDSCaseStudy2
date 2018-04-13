@@ -16,168 +16,9 @@ output:
 employeeDatRaw <- read.csv('CaseStudy2data.csv', header=TRUE)
 ```
 
-# Missing Values
-
-Fortunately, this data is not missing any values as demonstrated by the table below.
-
-
-```r
-# calculate NAs for raw data
-NAdataframe <- sapply(employeeDatRaw, function(x) sum(is.na(x)))
-# display NAs in kable table
-knitr::kable(NAdataframe, caption = "Counts of NAs (Missing Values) in Raw Data", row.names = TRUE, "html") %>%
-  kable_styling(bootstrap_options = c("striped","hover","condensed"), full_width=FALSE, position = "left")
-```
-
-<table class="table table-striped table-hover table-condensed" style="width: auto !important; ">
-<caption>Counts of NAs (Missing Values) in Raw Data</caption>
-<tbody>
-  <tr>
-   <td style="text-align:left;"> Age </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Attrition </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> BusinessTravel </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> DailyRate </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Department </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> DistanceFromHome </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Education </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> EducationField </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> EmployeeCount </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> EmployeeNumber </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> EnvironmentSatisfaction </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Gender </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> HourlyRate </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> JobInvolvement </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> JobLevel </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> JobRole </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> JobSatisfaction </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> MaritalStatus </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> MonthlyIncome </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> MonthlyRate </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> NumCompaniesWorked </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Over18 </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> OverTime </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> PercentSalaryHike </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> PerformanceRating </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> RelationshipSatisfaction </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> StandardHours </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> StockOptionLevel </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> TotalWorkingYears </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> TrainingTimesLastYear </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> WorkLifeBalance </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> YearsAtCompany </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> YearsInCurrentRole </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> YearsSinceLastPromotion </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> YearsWithCurrManager </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-</tbody>
-</table>
-
 ## Data Cleanup and Conversion
 
-#### Checking for missing data values . . .
+#### Checking for missing data values
 
 
 ```r
@@ -185,9 +26,13 @@ knitr::kable(NAdataframe, caption = "Counts of NAs (Missing Values) in Raw Data"
 numNAs <- sum(apply(employeeDatRaw,2,is.na))
 ```
 
+Fortunately, this data is not missing any values as demonstrated by the code ran above and output below.
+
 ##### Number of missing data values = 0
 
-#### Columns with no variation have no impact on attrition. Dropping . . .
+#### Columns with no variation have no impact on attrition
+
+We found several columns that don't have any variation and will actually cause future model building to fail. The code below is used to identify and remove those colomns. We also convert the response Attrition to numeric for future use.
 
 
 ```r
@@ -205,7 +50,6 @@ employeeDatRaw$Attrition <- as.numeric(employeeDatRaw$Attrition)-1
 ```
 
 ##### Dropped columns: EmployeeCount, Over18, StandardHours
-##### Factors converted to numeric: Attrition, BusinessTravel, Department, EducationField, Gender, JobRole, MaritalStatus, OverTime
 
 ## Attrition Rates (Competitor Analysis)
 
@@ -800,7 +644,7 @@ facetPlot <- melt(continuousTable, id.vars = "Attrition")
 p <- ggplot(data = facetPlot, aes(x = value, fill=Attrition)) + 
     geom_histogram(bins = 10, colour = "black") + 
     facet_wrap(~variable, scales = 'free', ncol = 4) + 
-    labs(title="Faceted Histogrms for Continuous Variabls", title_x="", title_y="") +
+    labs(title="Faceted Histograms for Continuous Variables", title_x="", title_y="") +
     scale_fill_manual(values = c("darkgrey","red")) 
     
 #p
@@ -1214,7 +1058,7 @@ glmnetfit <- cv.glmnet(GLMTrain.x, GLMTrain.y, family = "binomial", alpha=1)
 plot(glmnetfit)
 ```
 
-![](DDS_CaseStudy2_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+![](DDS_CaseStudy2_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
 
 The above plot shows us that the optimal value of lambda in the LASSO model (the value that minimizes the mean square error) is approximately -5.75. We want to provide the smallest number of coeffecients, but also give good accuracy. For this, we will use the value of lambda that lies within one standard error of the optimal value of lamda to display those coeffecients that are significant.
 
@@ -1385,4 +1229,4 @@ auc <- auc@y.values[[1]]
 text(x = .40, y = .6,paste("AUC = ", round(auc,3), sep = ""))
 ```
 
-![](DDS_CaseStudy2_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+![](DDS_CaseStudy2_files/figure-html/unnamed-chunk-13-1.png)<!-- -->

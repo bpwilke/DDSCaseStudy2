@@ -35,30 +35,22 @@ options(scipen = 999, digits=2)
 employeeDatRaw <- read.csv('CaseStudy2data.csv', header=TRUE)
 ```
 
-# Missing Values
-
-Fortunately, this data is not missing any values as demonstrated by the table below.
-
-```{r, echo=TRUE}
-# calculate NAs for raw data
-NAdataframe <- sapply(employeeDatRaw, function(x) sum(is.na(x)))
-# display NAs in kable table
-knitr::kable(NAdataframe, caption = "Counts of NAs (Missing Values) in Raw Data", row.names = TRUE, "html") %>%
-  kable_styling(bootstrap_options = c("striped","hover","condensed"), full_width=FALSE, position = "left")
-```
-
 ## Data Cleanup and Conversion
 
-#### Checking for missing data values . . .
+#### Checking for missing data values
 
 ```{r, echo=TRUE}
 # check for missing data values
 numNAs <- sum(apply(employeeDatRaw,2,is.na))
 ```
 
+Fortunately, this data is not missing any values as demonstrated by the code ran above and output below.
+
 ##### Number of missing data values = `r numNAs`
 
-#### Columns with no variation have no impact on attrition. Dropping . . .
+#### Columns with no variation have no impact on attrition
+
+We found several columns that don't have any variation and will actually cause future model building to fail. The code below is used to identify and remove those colomns. We also convert the response Attrition to numeric for future use.
 
 ```{r, echo=TRUE}
 
@@ -76,7 +68,6 @@ employeeDatRaw$Attrition <- as.numeric(employeeDatRaw$Attrition)-1
 ```
 
 ##### Dropped columns: `r cols`
-##### Factors converted to numeric: `r factor_columns`
 
 ## Attrition Rates (Competitor Analysis)
 
