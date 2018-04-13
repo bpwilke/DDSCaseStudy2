@@ -753,112 +753,6 @@ ggplot(data = melt(continuousTable), mapping = aes(x = value)) +
 
 <img src="DDS_CaseStudy2_files/figure-html/MannyEDA-1.png" style="display: block; margin: auto;" />
 
-<!--
-# ```{r, echo=TRUE}
-# 
-# # descriptive statistics, load into new data frame for processing
-# descriptiveTable <- stat.desc(employeeDatRaw)
-# 
-# # remove non-numeric features
-# dropcolumns <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime")
-# descriptiveTable <- descriptiveTable[,!(colnames(descriptiveTable) %in% dropcolumns)]
-# 
-# # round all numeric values to 2 decimal points
-# descriptiveTable <- round(descriptiveTable, 2)
-# 
-# # remove rows for statistics we don't care about, leaving: N, Mean, Median, Std Dev, Var, Min, Max
-# remove <- c("CI.mean.0.95", "nbr.val", "nbr.null", "nbr.na", "range", "sum", "SE.mean", "CI.mean", "coef.var")
-# descriptiveTable <- descriptiveTable[-which(rownames(descriptiveTable) %in% remove),]
-# 
-# # display descriptive statistics
-# knitr::kable(descriptiveTable,caption = "Descriptive Statistics for Numeric Features in the Raw Employee Data", row.names = TRUE, "html") %>%
-#   kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
-# 
-# ```
--->
-
-# Principal Components Analysis
-
-
-```r
-# remove non-numeric features, and features with zero variance
-dropcolumnsPCA <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime", "EmployeeCount", "StandardHours")
-employeeDatPCA <- employeeDatRaw[,!(colnames(employeeDatRaw) %in% dropcolumnsPCA)]
-
-# perform PCA
-employee_PCA <- prcomp(employeeDatPCA, center=TRUE, scale.=TRUE)
-
-# print principal components (only the first 4 PCs)
-print(employee_PCA$rotation[,1:4])
-```
-
-```
-##                               PC1     PC2     PC3    PC4
-## Age                      -0.27701  0.2827 -0.2552  0.045
-## DailyRate                 0.00426  0.0353 -0.0602  0.059
-## DistanceFromHome         -0.00407 -0.0563 -0.0315  0.267
-## Education                -0.07782  0.1471 -0.1009  0.315
-## EmployeeNumber            0.00834  0.0127  0.0244  0.368
-## EnvironmentSatisfaction  -0.00270  0.0291  0.0476 -0.155
-## HourlyRate                0.01030  0.0451 -0.0306  0.453
-## JobInvolvement            0.00106  0.0480  0.0099  0.285
-## JobLevel                 -0.38283  0.1907 -0.1403 -0.122
-## JobSatisfaction           0.00899 -0.0362 -0.0013 -0.261
-## MonthlyIncome            -0.37474  0.1998 -0.1524 -0.128
-## MonthlyRate              -0.00553  0.0626 -0.0345 -0.199
-## NumCompaniesWorked       -0.04849  0.3786 -0.3053  0.082
-## PercentSalaryHike         0.01583 -0.4257 -0.5582 -0.010
-## PerformanceRating         0.00006 -0.4444 -0.5420 -0.018
-## RelationshipSatisfaction -0.01568  0.0872  0.0076 -0.159
-## StockOptionLevel         -0.01584 -0.0071 -0.0166  0.425
-## TotalWorkingYears        -0.40346  0.1699 -0.1526 -0.028
-## TrainingTimesLastYear     0.01154 -0.0427  0.0660 -0.056
-## WorkLifeBalance          -0.01265 -0.0136  0.0236 -0.087
-## YearsAtCompany           -0.39150 -0.2164  0.1825  0.018
-## YearsInCurrentRole       -0.33592 -0.2815  0.1986  0.075
-## YearsSinceLastPromotion  -0.29741 -0.2032  0.1627  0.018
-## YearsWithCurrManager     -0.33038 -0.2815  0.2141  0.089
-```
-
-```r
-# summary of principal components
-summary(employee_PCA)
-```
-
-```
-## Importance of components%s:
-##                          PC1    PC2    PC3    PC4    PC5   PC6   PC7
-## Standard deviation     2.158 1.3551 1.3250 1.1006 1.0677 1.040 1.028
-## Proportion of Variance 0.194 0.0765 0.0732 0.0505 0.0475 0.045 0.044
-## Cumulative Proportion  0.194 0.2705 0.3437 0.3941 0.4416 0.487 0.531
-##                           PC8    PC9   PC10   PC11   PC12   PC13   PC14
-## Standard deviation     1.0215 1.0117 0.9954 0.9854 0.9750 0.9520 0.9505
-## Proportion of Variance 0.0435 0.0427 0.0413 0.0405 0.0396 0.0378 0.0377
-## Cumulative Proportion  0.5742 0.6169 0.6581 0.6986 0.7382 0.7760 0.8136
-##                         PC15   PC16   PC17   PC18   PC19   PC20    PC21
-## Standard deviation     0.942 0.9317 0.8680 0.7358 0.7226 0.5290 0.47546
-## Proportion of Variance 0.037 0.0362 0.0314 0.0226 0.0218 0.0117 0.00942
-## Cumulative Proportion  0.851 0.8868 0.9182 0.9407 0.9625 0.9742 0.98358
-##                          PC22    PC23    PC24
-## Standard deviation     0.4515 0.37649 0.21998
-## Proportion of Variance 0.0085 0.00591 0.00202
-## Cumulative Proportion  0.9921 0.99798 1.00000
-```
-
-
-```r
-# plot PCs using ggbiplot
-ggbiplot(employee_PCA, obs.scale=1, var.scale=1, groups=employeeDatPCA$Attrition, ellipse=TRUE, circle=TRUE) + theme(legend.position='top') + scale_color_discrete()
-```
-
-![](DDS_CaseStudy2_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
-
-```r
-biplot(employee_PCA) # Base R
-```
-
-![](DDS_CaseStudy2_files/figure-html/unnamed-chunk-8-2.png)<!-- -->
-
 # Exploring Attrition with Binomial Logistic Regression
 
 Binomial logistic regression is a special form of mutiple regression that is used to model a dichotomous outcome. In our case, this outcome is whether an employee left the company or is still a current employee.
@@ -1042,27 +936,27 @@ print(paste('Accuracy',1-misClasificError))
 ## [1] "Accuracy 0.863945578231292"
 ```
 
-The model already exhibits very high predictive capability (86.4%), but we will now refit the model using only variables with signficance from the full model. This done to simplify the model for interpretation and to reduce potential multicolinearity issues.
+The model already exhibits very high predictive capability (86.4%), but we will now refit the model using only variables with signficance from the full model. This is done to simplify the model for interpretation and to reduce potential multicolinearity issues.
 
 The model will be fit with the following features:
 
-BusinessTravel
-DistanceFromHome
-EnvironmentSatisfaction
-Gender
-JobInvolvement
-JobRole (??)
-JobSatisfaction
-MaritalStatus
-NumCompaniesWorked
-OverTime
-RelationshipSatisfaction
-TotalWorkingYears
-TrainingTimesLastYear
-WorkLifeBalance
-YearsAtCompany
-YearsInCurrentRole
-YearsSinceLastPromotion
+BusinessTravel<br>
+DistanceFromHome<br>
+EnvironmentSatisfaction<br>
+Gender<br>
+JobInvolvement<br>
+JobRole<br>
+JobSatisfaction<br>
+MaritalStatus<br>
+NumCompaniesWorked<br>
+OverTime<br>
+RelationshipSatisfaction<br>
+TotalWorkingYears<br>
+TrainingTimesLastYear<br>
+WorkLifeBalance<br>
+YearsAtCompany<br>
+YearsInCurrentRole<br>
+YearsSinceLastPromotion<br>
 YearsWithCurrManager
 
 
@@ -1206,14 +1100,12 @@ print(paste('Accuracy',1-misClasificError))
 ## [1] "Accuracy 0.887755102040816"
 ```
 
-The predictive capability of this reduced model improved slightly and has now been simplifed quite a bit in terms of the number of features.
+The predictive capability of this reduced model improved slightly to 88.77% and has now been simplifed quite a bit in terms of the number of features.
 
+# Using GLMNET and Cross-Validation for Feature Selection of Logistic Regression
 
+Our earlier approach was to intuitively select features from the data that represented statistical and practical significance to the question of interest. In this section we will employ an automated feature selection tool that leverages LASSO (Least Absolute Shrinkage and Selection Operator) and cross-validation to select important features in the model. 
 
-
-
-
-# Using GLMNET for Feature Selection of Logistic Regression
 
 ```r
 employee_logistic <- employeeDatRaw
@@ -1260,12 +1152,99 @@ GLMTrain.x <- GLMTrain.x[,!(colnames(GLMTrain.x) %in% dropcolumns)]
 GLMTrain.x <- as.matrix(data.frame(GLMTrain.x, GLMTrain.xfactors))
 
 # use glmnet to fit a binomial logistic regression
-glmnetfit <- glmnet(GLMTrain.x, GLMTrain.y, family = "binomial")
+glmnetfit <- cv.glmnet(GLMTrain.x, GLMTrain.y, family = "binomial", alpha=1)
 
 plot(glmnetfit)
 ```
 
-![](DDS_CaseStudy2_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+![](DDS_CaseStudy2_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+
+The above plot shows us that the optimal value of lambda in the LASSO model (the value that minimizes the mean square error) is approximately -5.75. We want to provide the smallest number of coeffecients, but also give good accuracy. For this, we will use the value of lambda that lies within one standard error of the optimal value of lamda to display those coeffecients that are significant.
+
+
+```r
+lambda_lse <- glmnetfit$lambda.1se
+coef(glmnetfit, s=lambda_lse)
+```
+
+```
+## 46 x 1 sparse Matrix of class "dgCMatrix"
+##                                                     1
+## (Intercept)                                 -1.887162
+## Age                                          0.027382
+## DailyRate                                    .       
+## DistanceFromHome                            -0.015289
+## Education                                    .       
+## EmployeeNumber                               .       
+## EnvironmentSatisfaction                      0.201419
+## HourlyRate                                   .       
+## JobInvolvement                               0.386889
+## JobLevel                                     .       
+## JobSatisfaction                              0.211354
+## MonthlyIncome                                0.000025
+## MonthlyRate                                  .       
+## NumCompaniesWorked                          -0.090664
+## PercentSalaryHike                            .       
+## PerformanceRating                            .       
+## RelationshipSatisfaction                     0.127486
+## StockOptionLevel                             0.113833
+## TotalWorkingYears                            0.010151
+## TrainingTimesLastYear                        0.085996
+## WorkLifeBalance                              0.167085
+## YearsAtCompany                               .       
+## YearsInCurrentRole                           0.045513
+## YearsSinceLastPromotion                     -0.027188
+## YearsWithCurrManager                         0.023270
+## GLMTrain.x.BusinessTravelTravel_Frequently  -0.581233
+## GLMTrain.x.BusinessTravelTravel_Rarely       .       
+## GLMTrain.x.DepartmentResearch...Development  0.386551
+## GLMTrain.x.DepartmentSales                   .       
+## GLMTrain.x.EducationFieldLife.Sciences       .       
+## GLMTrain.x.EducationFieldMarketing           .       
+## GLMTrain.x.EducationFieldMedical             0.092753
+## GLMTrain.x.EducationFieldOther               .       
+## GLMTrain.x.EducationFieldTechnical.Degree   -0.490319
+## GLMTrain.x.GenderMale                        .       
+## GLMTrain.x.JobRoleHuman.Resources            .       
+## GLMTrain.x.JobRoleLaboratory.Technician     -0.704058
+## GLMTrain.x.JobRoleManager                    .       
+## GLMTrain.x.JobRoleManufacturing.Director     .       
+## GLMTrain.x.JobRoleResearch.Director          .       
+## GLMTrain.x.JobRoleResearch.Scientist         .       
+## GLMTrain.x.JobRoleSales.Executive            .       
+## GLMTrain.x.JobRoleSales.Representative      -0.714283
+## GLMTrain.x.MaritalStatusMarried              .       
+## GLMTrain.x.MaritalStatusSingle              -0.484933
+## GLMTrain.x.OverTimeYes                      -1.331467
+```
+
+These significant coeffecients are:
+
+Age<br>
+DistanceFromHome<br>
+EnvironmentSatisfaction<br>
+JobInvolvement<br>
+JobSatisfaction<br>
+MonthlyIncome<br>
+NumCompaniesWorked<br>
+RelationshipSatisfaction<br>
+StockOptionLevel<br>
+TotalWorkingYears<br>
+TrainingTimesLastYear<br>
+WorkLifeBalance<br>
+YearsInCurrentRole<br>
+YearsSinceLastPromotion<br>
+YearsWithCurrManager<br>
+Department<br>
+EducationField<br>
+JobRole<br>
+MaritalStatus<br>
+OverTimeYes<br>
+
+This is 20 total features, which is actually 2 more than our reduced model!
+
+We will proceed to test the predictive capability of this model like we've done before using the 20% of testing data.
+
 
 ```r
 # # # START Prediction from GLMNET fit model # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -1302,21 +1281,34 @@ print(paste('Accuracy',1-misClasificError))
 ```
 
 ```
-## [1] "Accuracy 0.865861287043553"
+## [1] "Accuracy 0.863945578231292"
 ```
 
+This model exhibits less predictive capability on the hold out test set (86.39% accuracy). For this reason, we will use the reduced model as our final recommendation for predicting attrition. These features included:
+
+BusinessTravel<br>
+DistanceFromHome<br>
+EnvironmentSatisfaction<br>
+Gender<br>
+JobInvolvement<br>
+JobRole<br>
+JobSatisfaction<br>
+MaritalStatus<br>
+NumCompaniesWorked<br>
+OverTime<br>
+RelationshipSatisfaction<br>
+TotalWorkingYears<br>
+TrainingTimesLastYear<br>
+WorkLifeBalance<br>
+YearsAtCompany<br>
+YearsInCurrentRole<br>
+YearsSinceLastPromotion<br>
+YearsWithCurrManager
 
 
+# ROC Curve for our Final (Reduced) Predictive Model
 
-
-
-
-
-
-
-
-
-and now some ROC curves...
+An ROC curve is a graphical plot that illustrates the diagnostic ability of a binary classifier system like our logistic regression model. The curve is created by plotting the true positive rate (TPR) against the false positive rate (FPR)
 
 
 ```r
