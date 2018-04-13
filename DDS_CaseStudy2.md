@@ -200,31 +200,63 @@ employeeDatRaw <- employeeDatRaw[,-drop_columns]
 factor_columns <- names(which(sapply(names(employeeDatRaw),function(x) class(employeeDatRaw[[x]])=="factor")))
 
 # convert factors to numeric
-# employeeDatRaw[,factor_columns] <- sapply(factor_columns,function(x) as.numeric(employeeDatRaw[[x]])-1)
+#employeeDatRaw[,factor_columns] <- sapply(factor_columns,function(x) as.numeric(employeeDatRaw[[x]])-1)
+employeeDatRaw$Attrition <- as.numeric(employeeDatRaw$Attrition)-1
 ```
 
 ##### Dropped columns: EmployeeCount, Over18, StandardHours
-
-
-```r
-employeeDatRaw$Attrition <- as.numeric(employeeDatRaw$Attrition)-1
-
-# determine overall attrition rate
-attritionRate <- (sum(employeeDatRaw$Attrition) / nrow(employeeDatRaw)) * 100
-```
+##### Factors converted to numeric: Attrition, BusinessTravel, Department, EducationField, Gender, JobRole, MaritalStatus, OverTime
 
 ## Attrition Rates (Competitor Analysis)
 
-##### Overall attrition rate for XYZ Company: 16.12%
-### Per Compdata Surveys & Consulting: Turnover Report 2017
-#### Attrition rates in 2017 for all industires: 13.5% voluntary and 18.5% overall.
-#### Attrition rates in 2017 for Healthcare: 15.9% voluntary and 20.5% overall.
-#### Attrition rates in 2017 for Manufacturing and Distribution: 11.1% voluntary and 17.0% overall.
 
+```r
+# determine overall attrition rate
+attritionRate <- (sum(employeeDatRaw$Attrition) / nrow(employeeDatRaw)) * 100
 
-## Additional Information to Collect
-##### Voluntary/involuntary breakdown
-##### Better job/department breakdown for Research & Development
+ind <- c("Overall","Healthcare","Manufacturing")
+vol <- c(13.5, 15.9, 11.1)
+invol <- c(18.5, 20.5, 17.0)
+industryRates <- data.frame(ind,vol,invol)
+names(industryRates) <- c("Industry", "Voluntary(%)", "Involuntary(%)")
+
+# display industry attrition
+knitr::kable(industryRates, caption = "Attrition Rates. Per Compdata Surveys & Consulting's Turnover Report 2017", row.names = FALSE, "html") %>%
+  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
+```
+
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>Attrition Rates. Per Compdata Surveys &amp; Consulting's Turnover Report 2017</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Industry </th>
+   <th style="text-align:right;"> Voluntary(%) </th>
+   <th style="text-align:right;"> Involuntary(%) </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Overall </td>
+   <td style="text-align:right;"> 14 </td>
+   <td style="text-align:right;"> 18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Healthcare </td>
+   <td style="text-align:right;"> 16 </td>
+   <td style="text-align:right;"> 20 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Manufacturing </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 17 </td>
+  </tr>
+</tbody>
+</table>
+##### reference: http://blog.compdatasurveys.com/employee-turnover-trends-in-2017
+
+## Attrition Rates (XYZ Company)
+
+##### Overall attrition rate: 16.12%
 
 
 ```r
@@ -236,7 +268,7 @@ attritionRateByDept$Rate <- (attritionRateByDept$x / attritionRateByDept$freq) *
 names(attritionRateByDept) <- c("Department", "Attrition", "PopulationSize", "AttritionRate")
 
 # display attrition by department
-knitr::kable(attritionRateByDept,caption = "Attrition Rates by Department", row.names = TRUE, "html") %>%
+knitr::kable(attritionRateByDept,caption = "Attrition Rates by Department", row.names = FALSE, "html") %>%
   kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
 ```
 
@@ -244,7 +276,6 @@ knitr::kable(attritionRateByDept,caption = "Attrition Rates by Department", row.
 <caption>Attrition Rates by Department</caption>
  <thead>
   <tr>
-   <th style="text-align:left;">   </th>
    <th style="text-align:left;"> Department </th>
    <th style="text-align:right;"> Attrition </th>
    <th style="text-align:right;"> PopulationSize </th>
@@ -253,21 +284,18 @@ knitr::kable(attritionRateByDept,caption = "Attrition Rates by Department", row.
  </thead>
 <tbody>
   <tr>
-   <td style="text-align:left;"> 1 </td>
    <td style="text-align:left;"> Human Resources </td>
    <td style="text-align:right;"> 12 </td>
    <td style="text-align:right;"> 63 </td>
    <td style="text-align:right;"> 19 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 2 </td>
    <td style="text-align:left;"> Research &amp; Development </td>
    <td style="text-align:right;"> 133 </td>
    <td style="text-align:right;"> 961 </td>
    <td style="text-align:right;"> 14 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 3 </td>
    <td style="text-align:left;"> Sales </td>
    <td style="text-align:right;"> 92 </td>
    <td style="text-align:right;"> 446 </td>
@@ -279,162 +307,200 @@ knitr::kable(attritionRateByDept,caption = "Attrition Rates by Department", row.
 ```r
 # determine attrition rate by job role
 attritionByJobRole <- aggregate(employeeDatRaw$Attrition, by=list(JobRole=employeeDatRaw$JobRole), FUN=sum)
-names(attritionByJobRole) <- c("JobRole","Attrition")
-satisfactionByJobRole <- aggregate(employeeDatRaw$JobSatisfaction, by=list(JobRole=employeeDatRaw$JobRole), FUN=stat.desc)
-# sizeByJobRole <- count(employeeDatRaw,"JobRole")
-attritionRateByJobRole <- cbind(attritionByJobRole, satisfactionByJobRole$x)
-attritionRateByJobRole$AttritionRate <- (attritionRateByJobRole$Attrition / attritionRateByJobRole$nbr.val) * 100
-drop_columns <- c("nbr.null","nbr.na","range","sum","SE.mean","CI.mean.0.95","coef.var")
-attritionRateByJobRole <- attritionRateByJobRole[ , !(names(attritionRateByJobRole) %in% drop_columns)]
- 
-names(attritionRateByJobRole) <- c("JobRole", "Attrition", "PopulationSize", "SatMin", "SatMax", "SatMedian","SatMean","SatVar","SatStdDev","AttritionRate")
-
+sizeByRole <- count(employeeDatRaw,"JobRole")
+attritionRateByJobRole <- merge(attritionByJobRole,sizeByRole, by="JobRole")
+attritionRateByJobRole$Rate <- (attritionRateByJobRole$x / attritionRateByJobRole$freq) * 100
+names(attritionRateByJobRole) <- c("JobRole", "Attrition", "PopulationSize", "AttritionRate")
 
 # display attrition rate by job role
-knitr::kable(attritionRateByJobRole,caption = "Attrition Rates by Job Role, Including Job Satisfaction Statistics", row.names = TRUE, "html") %>%
+knitr::kable(attritionRateByJobRole,caption = "Attrition Rates by Job Role", row.names = FALSE, "html") %>%
   kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
 ```
 
 <table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
-<caption>Attrition Rates by Job Role, Including Job Satisfaction Statistics</caption>
+<caption>Attrition Rates by Job Role</caption>
  <thead>
   <tr>
-   <th style="text-align:left;">   </th>
    <th style="text-align:left;"> JobRole </th>
    <th style="text-align:right;"> Attrition </th>
    <th style="text-align:right;"> PopulationSize </th>
-   <th style="text-align:right;"> SatMin </th>
-   <th style="text-align:right;"> SatMax </th>
-   <th style="text-align:right;"> SatMedian </th>
-   <th style="text-align:right;"> SatMean </th>
-   <th style="text-align:right;"> SatVar </th>
-   <th style="text-align:right;"> SatStdDev </th>
    <th style="text-align:right;"> AttritionRate </th>
   </tr>
  </thead>
 <tbody>
   <tr>
-   <td style="text-align:left;"> 1 </td>
    <td style="text-align:left;"> Healthcare Representative </td>
    <td style="text-align:right;"> 9 </td>
    <td style="text-align:right;"> 131 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 3.0 </td>
-   <td style="text-align:right;"> 2.8 </td>
-   <td style="text-align:right;"> 1.2 </td>
-   <td style="text-align:right;"> 1.1 </td>
    <td style="text-align:right;"> 6.9 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 2 </td>
    <td style="text-align:left;"> Human Resources </td>
    <td style="text-align:right;"> 12 </td>
    <td style="text-align:right;"> 52 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 2.5 </td>
-   <td style="text-align:right;"> 2.6 </td>
-   <td style="text-align:right;"> 1.1 </td>
-   <td style="text-align:right;"> 1.1 </td>
    <td style="text-align:right;"> 23.1 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 3 </td>
    <td style="text-align:left;"> Laboratory Technician </td>
    <td style="text-align:right;"> 62 </td>
    <td style="text-align:right;"> 259 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 3.0 </td>
-   <td style="text-align:right;"> 2.7 </td>
-   <td style="text-align:right;"> 1.3 </td>
-   <td style="text-align:right;"> 1.1 </td>
    <td style="text-align:right;"> 23.9 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 4 </td>
    <td style="text-align:left;"> Manager </td>
    <td style="text-align:right;"> 5 </td>
    <td style="text-align:right;"> 102 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 3.0 </td>
-   <td style="text-align:right;"> 2.7 </td>
-   <td style="text-align:right;"> 1.3 </td>
-   <td style="text-align:right;"> 1.1 </td>
    <td style="text-align:right;"> 4.9 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 5 </td>
    <td style="text-align:left;"> Manufacturing Director </td>
    <td style="text-align:right;"> 10 </td>
    <td style="text-align:right;"> 145 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 3.0 </td>
-   <td style="text-align:right;"> 2.7 </td>
-   <td style="text-align:right;"> 1.1 </td>
-   <td style="text-align:right;"> 1.1 </td>
    <td style="text-align:right;"> 6.9 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 6 </td>
    <td style="text-align:left;"> Research Director </td>
    <td style="text-align:right;"> 2 </td>
    <td style="text-align:right;"> 80 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 3.0 </td>
-   <td style="text-align:right;"> 2.7 </td>
-   <td style="text-align:right;"> 1.1 </td>
-   <td style="text-align:right;"> 1.1 </td>
    <td style="text-align:right;"> 2.5 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 7 </td>
    <td style="text-align:left;"> Research Scientist </td>
    <td style="text-align:right;"> 47 </td>
    <td style="text-align:right;"> 292 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 3.0 </td>
-   <td style="text-align:right;"> 2.8 </td>
-   <td style="text-align:right;"> 1.2 </td>
-   <td style="text-align:right;"> 1.1 </td>
    <td style="text-align:right;"> 16.1 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 8 </td>
    <td style="text-align:left;"> Sales Executive </td>
    <td style="text-align:right;"> 57 </td>
    <td style="text-align:right;"> 326 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 3.0 </td>
-   <td style="text-align:right;"> 2.8 </td>
-   <td style="text-align:right;"> 1.3 </td>
-   <td style="text-align:right;"> 1.1 </td>
    <td style="text-align:right;"> 17.5 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 9 </td>
    <td style="text-align:left;"> Sales Representative </td>
    <td style="text-align:right;"> 33 </td>
    <td style="text-align:right;"> 83 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 3.0 </td>
-   <td style="text-align:right;"> 2.7 </td>
-   <td style="text-align:right;"> 1.1 </td>
-   <td style="text-align:right;"> 1.0 </td>
    <td style="text-align:right;"> 39.8 </td>
   </tr>
 </tbody>
 </table>
 
+```r
+# determine attrition rate by gender
+attritionByGender <- aggregate(employeeDatRaw$Attrition, by=list(Gender=employeeDatRaw$Gender), FUN=sum)
+sizeByGender <- count(employeeDatRaw,"Gender")
+attritionRateByGender <- merge(attritionByGender,sizeByGender, by="Gender")
+attritionRateByGender$Rate <- (attritionRateByGender$x / attritionRateByGender$freq) * 100
+names(attritionRateByGender) <- c("Gender", "Attrition", "PopulationSize", "AttritionRate")
+
+# display attrition rate by gender
+knitr::kable(attritionRateByGender,caption = "Attrition Rates by Gender", row.names = FALSE, "html") %>%
+  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
+```
+
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>Attrition Rates by Gender</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Gender </th>
+   <th style="text-align:right;"> Attrition </th>
+   <th style="text-align:right;"> PopulationSize </th>
+   <th style="text-align:right;"> AttritionRate </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Female </td>
+   <td style="text-align:right;"> 87 </td>
+   <td style="text-align:right;"> 588 </td>
+   <td style="text-align:right;"> 15 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Male </td>
+   <td style="text-align:right;"> 150 </td>
+   <td style="text-align:right;"> 882 </td>
+   <td style="text-align:right;"> 17 </td>
+  </tr>
+</tbody>
+</table>
+
+```r
+ageBin <- function(x) {
+  if (x < 25) return ("< 25")
+  if (x < 35) return ("25-35")
+  if (x < 45) return ("35-45")
+  if (x < 55) return ("45-55")
+  return("55 and >")
+}
+# determine attrition rate by age
+attritionRaw <- employeeDatRaw
+attritionRaw$AgeBin <- sapply(attritionRaw$Age, ageBin)
+attritionByAge <- aggregate(attritionRaw$Attrition, by=list(AgeBin=attritionRaw$AgeBin), FUN=sum)
+sizeByAge <- count(attritionRaw,"AgeBin")
+attritionRateByAge <- merge(attritionByAge, sizeByAge, by="AgeBin")
+attritionRateByAge$Rate <- (attritionRateByAge$x / attritionRateByAge$freq) * 100
+names(attritionRateByAge) <- c("AgeRange", "Attrition", "PopulationSize", "AttritionRate")
+
+# display attrition rate by age range
+knitr::kable(attritionRateByAge,caption = "Attrition Rates by Age Range", row.names = FALSE, "html") %>%
+  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
+```
+
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>Attrition Rates by Age Range</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> AgeRange </th>
+   <th style="text-align:right;"> Attrition </th>
+   <th style="text-align:right;"> PopulationSize </th>
+   <th style="text-align:right;"> AttritionRate </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> &lt; 25 </td>
+   <td style="text-align:right;"> 38 </td>
+   <td style="text-align:right;"> 97 </td>
+   <td style="text-align:right;"> 39 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 25-35 </td>
+   <td style="text-align:right;"> 112 </td>
+   <td style="text-align:right;"> 554 </td>
+   <td style="text-align:right;"> 20 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 35-45 </td>
+   <td style="text-align:right;"> 51 </td>
+   <td style="text-align:right;"> 505 </td>
+   <td style="text-align:right;"> 10 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 45-55 </td>
+   <td style="text-align:right;"> 25 </td>
+   <td style="text-align:right;"> 245 </td>
+   <td style="text-align:right;"> 10 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 55 and &gt; </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 69 </td>
+   <td style="text-align:right;"> 16 </td>
+  </tr>
+</tbody>
+</table>
+## Additional Information to Collect
+##### Voluntary/involuntary breakdown
+##### Better job/department breakdown for Research & Development
 
 # Exploratory Data Analysis
+
+From the data provided we can clearly see that there is a subset of variabes that are continuous and another that are categorical. In order to better understand the distribution and skew of the continuous numerical columns a set of faceted histograms was generated. Other than Age which appears normaly distributed, it is clear that most columns are right skewed. Each factor for the categorical columns is summarized in a review. One of the more interesting distributions include YearsSinceLastPromotion, the large right skew could indicate a significant factor associated with attrition.
+
+We also notice from the data that EmployeeCount and StandardHours are the same value for all employees and are not meaningful variables. Similarly, EmployeeNumber does not produce any meaingful information given that each employee has a unique EmployeeNumber.
+
+When incorporating Attrition into the histograms it appears that those with more YearsAtCompany are less likely to leave the company. A similar trend is obsered with MonthlyIncome, the larger the MonthlyIncome the less Attrition is observed. Finally those with a higher JobLevel also appear to have less attrition than those with lower JobLevel values.
+
 
 ```r
 # descriptive statistics, load into new data frame for processing
@@ -724,34 +790,25 @@ summary(categoricalTable)
 ```
 
 ```r
-head(melt(continuousTable))
+continuousTable$Attrition <- employeeDatRaw$Attrition
+continuousTable$EmployeeCount <- NULL
+continuousTable$EmployeeNumber <- NULL
+continuousTable$StandardHours <- NULL
+
+facetPlot <- melt(continuousTable, id.vars = "Attrition")
+
+p <- ggplot(data = facetPlot, aes(x = value, fill=Attrition)) + 
+    geom_histogram(bins = 10, colour = "black") + 
+    facet_wrap(~variable, scales = 'free', ncol = 4) + 
+    labs(title="Faceted Histogrms for Continuous Variabls", title_x="", title_y="") +
+    scale_fill_manual(values = c("darkgrey","red")) 
+    
+#p
+
+# the above ggplot doesn't seem to render correctly in RMarkdown, but it does in R Studio if you're curious. Therefore, we are displaying the result as a static image loaded from GitHub.
 ```
 
-```
-## No id variables; using all as measure variables
-```
-
-```
-##   variable value
-## 1      Age    41
-## 2      Age    49
-## 3      Age    37
-## 4      Age    33
-## 5      Age    27
-## 6      Age    32
-```
-
-```r
-ggplot(data = melt(continuousTable), mapping = aes(x = value)) + 
-  geom_histogram(bins = 10) + facet_wrap(~variable, scales = 'free', ncol = 4) + 
-  labs(title="Faceted Histogrms for Continuous Variabls", title_x="", title_y="")
-```
-
-```
-## No id variables; using all as measure variables
-```
-
-<img src="DDS_CaseStudy2_files/figure-html/MannyEDA-1.png" style="display: block; margin: auto;" />
+![](https://github.com/bpwilke/DDSCaseStudy2/blob/MannyWorking2/DDS_CaseStudy2_files/ImageBackup.png?raw=true)
 
 # Exploring Attrition with Binomial Logistic Regression
 

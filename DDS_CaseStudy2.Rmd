@@ -15,18 +15,12 @@ for(lib in install.lib){
   install.packages(lib,dependences=TRUE)
 } 
 
-ggbi <- "ggbiplot"
-if (!ggbi %in% installed.packages()){
-  install_github("vqv/ggbiplot") # Not on CRAN, must install via GitHub using devtools package
-} 
-
-load.lib = c(load.lib,"ggbiplot")
 sapply(load.lib,require,character=TRUE)
 
 knitr::opts_chunk$set(echo = TRUE)
 library(plyr)
 library(kableExtra) # to make uber sexy tables for output
-library(ggbiplot) # implementation of biplot using ggplot2 for plotting PCs
+#library(ggbiplot) # implementation of biplot using ggplot2 for plotting PCs
 library(pastecs) # for easy descriptive statistics
 library(ROCR) # for ROC plots and AUC calculations
 library(glmnet)
@@ -167,6 +161,13 @@ knitr::kable(attritionRateByAge,caption = "Attrition Rates by Age Range", row.na
 ##### Better job/department breakdown for Research & Development
 
 # Exploratory Data Analysis
+
+From the data provided we can clearly see that there is a subset of variabes that are continuous and another that are categorical. In order to better understand the distribution and skew of the continuous numerical columns a set of faceted histograms was generated. Other than Age which appears normaly distributed, it is clear that most columns are right skewed. Each factor for the categorical columns is summarized in a review. One of the more interesting distributions include YearsSinceLastPromotion, the large right skew could indicate a significant factor associated with attrition.
+
+We also notice from the data that EmployeeCount and StandardHours are the same value for all employees and are not meaningful variables. Similarly, EmployeeNumber does not produce any meaingful information given that each employee has a unique EmployeeNumber.
+
+When incorporating Attrition into the histograms it appears that those with more YearsAtCompany are less likely to leave the company. A similar trend is obsered with MonthlyIncome, the larger the MonthlyIncome the less Attrition is observed. Finally those with a higher JobLevel also appear to have less attrition than those with lower JobLevel values.
+
 ``` {r MannyEDA, echo=TRUE,fig.height = 16, fig.width = 10, fig.align="center"}
 # descriptive statistics, load into new data frame for processing
 descriptiveTable <- pastecs::stat.desc(employeeDatRaw)
@@ -191,14 +192,25 @@ knitr::kable(continuousTable.transposed,caption = "Descriptive Statistics for Nu
 
 summary(categoricalTable)
 
-head(melt(continuousTable))
+continuousTable$Attrition <- employeeDatRaw$Attrition
+continuousTable$EmployeeCount <- NULL
+continuousTable$EmployeeNumber <- NULL
+continuousTable$StandardHours <- NULL
 
-ggplot(data = melt(continuousTable), mapping = aes(x = value)) + 
-  geom_histogram(bins = 10) + facet_wrap(~variable, scales = 'free', ncol = 4) + 
-  labs(title="Faceted Histogrms for Continuous Variabls", title_x="", title_y="")
+facetPlot <- melt(continuousTable, id.vars = "Attrition")
 
- 
+p <- ggplot(data = facetPlot, aes(x = value, fill=Attrition)) + 
+    geom_histogram(bins = 10, colour = "black") + 
+    facet_wrap(~variable, scales = 'free', ncol = 4) + 
+    labs(title="Faceted Histograms for Continuous Variables", title_x="", title_y="") +
+    scale_fill_manual(values = c("darkgrey","red")) 
+    
+#p
+
+# the above ggplot doesn't seem to render correctly in RMarkdown, but it does in R Studio if you're curious. Therefore, we are displaying the result as a static image loaded from GitHub.
 ```
+
+![](https://github.com/bpwilke/DDSCaseStudy2/blob/MannyWorking2/DDS_CaseStudy2_files/ImageBackup.png?raw=true)
 
 # Exploring Attrition with Binomial Logistic Regression
 
