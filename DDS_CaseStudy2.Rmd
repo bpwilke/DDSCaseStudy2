@@ -15,17 +15,12 @@ for(lib in install.lib){
   install.packages(lib,dependences=TRUE)
 } 
 
-ggbi <- "ggbiplot"
-if (!ggbi %in% installed.packages()){ # Not on CRAN, must install via GitHub using devtools package
-} 
-
-load.lib = c(load.lib,"ggbiplot")
 sapply(load.lib,require,character=TRUE)
 
 knitr::opts_chunk$set(echo = TRUE)
 library(plyr)
 library(kableExtra) # to make uber sexy tables for output
-library(ggbiplot) # implementation of biplot using ggplot2 for plotting PCs
+#library(ggbiplot) # implementation of biplot using ggplot2 for plotting PCs
 library(pastecs) # for easy descriptive statistics
 library(ROCR) # for ROC plots and AUC calculations
 library(glmnet)
@@ -40,30 +35,22 @@ options(scipen = 999, digits=2)
 employeeDatRaw <- read.csv('CaseStudy2data.csv', header=TRUE)
 ```
 
-# Missing Values
-
-Fortunately, this data is not missing any values as demonstrated by the table below.
-
-```{r, echo=TRUE}
-# calculate NAs for raw data
-NAdataframe <- sapply(employeeDatRaw, function(x) sum(is.na(x)))
-# display NAs in kable table
-knitr::kable(NAdataframe, caption = "Counts of NAs (Missing Values) in Raw Data", row.names = TRUE, "html") %>%
-  kable_styling(bootstrap_options = c("striped","hover","condensed"), full_width=FALSE, position = "left")
-```
-
 ## Data Cleanup and Conversion
 
-#### Checking for missing data values . . .
+#### Checking for missing data values
 
 ```{r, echo=TRUE}
 # check for missing data values
 numNAs <- sum(apply(employeeDatRaw,2,is.na))
 ```
 
+Fortunately, this data is not missing any values as demonstrated by the code ran above and output below.
+
 ##### Number of missing data values = `r numNAs`
 
-#### Columns with no variation have no impact on attrition. Dropping . . .
+#### Columns with no variation have no impact on attrition
+
+We found several columns that don't have any variation and will actually cause future model building to fail. The code below is used to identify and remove those colomns. We also convert the response Attrition to numeric for future use.
 
 ```{r, echo=TRUE}
 
@@ -80,7 +67,6 @@ employeeDatRaw$Attrition <- as.numeric(employeeDatRaw$Attrition)-1
 ```
 
 ##### Dropped columns: `r cols`
-##### Factors converted to numeric: `r factor_columns`
 
 ## Attrition Rates (Competitor Analysis)
 
@@ -105,6 +91,14 @@ knitr::kable(industryRates, caption = "Attrition Rates. Per Compdata Surveys & C
 
 ##### Overall attrition rate: `r attritionRate`%
 
+<style>
+caption {
+      color: black;
+      font-weight: bold;
+      font-size: 1.0em;
+      text-align:center;
+    } 
+</style>
 ```{r, echo=TRUE, results="asis"}
 
 #############################################################
@@ -149,14 +143,14 @@ generateAttritionDF <- function(attr,df) {
   # merge into a new dataframe and calculate the attrition rate for each attribute value
   attritionRateByAttr <- merge(attritionByAttr, sizeByAttr, by=attr)
   attritionRateByAttr$Rate <- (attritionRateByAttr$x / attritionRateByAttr$freq) * 100
-  names(attritionRateByAttr) <- c(attr, "Attrition", "PopulationSize", "AttritionRate")
+  names(attritionRateByAttr) <- c(attr, "Attrition", "PopulationSize", "AttritionRate(%)")
   return(attritionRateByAttr)
 }
 
 # displayAttritionAttr displays the given data frame in a table with an appropriate title
 displayAttritionAttr <- function(attr, df) {
     title <- paste("Attrition Rates by ", attr)
-    print(knitr::kable(df, caption = title, row.names = FALSE, "html") %>% kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive")))
+    print(knitr::kable(df, caption = title, row.names = FALSE, "html") %>% kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"), full_width = F, position="left"))
     return
 }
 
@@ -174,6 +168,13 @@ for (attr in attritionAttrs) {
 ##### Better job/department breakdown for Research & Development
 
 # Exploratory Data Analysis
+
+From the data provided we can clearly see that there is a subset of variabes that are continuous and another that are categorical. In order to better understand the distribution and skew of the continuous numerical columns a set of faceted histograms was generated. Other than Age which appears normaly distributed, it is clear that most columns are right skewed. Each factor for the categorical columns is summarized in a review. One of the more interesting distributions include YearsSinceLastPromotion, the large right skew could indicate a significant factor associated with attrition.
+
+We also notice from the data that EmployeeCount and StandardHours are the same value for all employees and are not meaningful variables. Similarly, EmployeeNumber does not produce any meaingful information given that each employee has a unique EmployeeNumber.
+
+When incorporating Attrition into the histograms it appears that those with more YearsAtCompany are less likely to leave the company. A similar trend is obsered with MonthlyIncome, the larger the MonthlyIncome the less Attrition is observed. Finally those with a higher JobLevel also appear to have less attrition than those with lower JobLevel values.
+
 ``` {r MannyEDA, echo=TRUE,fig.height = 16, fig.width = 10, fig.align="center"}
 # descriptive statistics, load into new data frame for processing
 descriptiveTable <- pastecs::stat.desc(employeeDatRaw)
@@ -198,62 +199,25 @@ knitr::kable(continuousTable.transposed,caption = "Descriptive Statistics for Nu
 
 summary(categoricalTable)
 
-head(melt(continuousTable))
+continuousTable$Attrition <- employeeDatRaw$Attrition
+continuousTable$EmployeeCount <- NULL
+continuousTable$EmployeeNumber <- NULL
+continuousTable$StandardHours <- NULL
 
-ggplot(data = melt(continuousTable), mapping = aes(x = value)) + 
-  geom_histogram(bins = 10) + facet_wrap(~variable, scales = 'free', ncol = 4) + 
-  labs(title="Faceted Histogrms for Continuous Variabls", title_x="", title_y="")
+facetPlot <- melt(continuousTable, id.vars = "Attrition")
 
- 
+p <- ggplot(data = facetPlot, aes(x = value, fill=Attrition)) + 
+    geom_histogram(bins = 10, colour = "black") + 
+    facet_wrap(~variable, scales = 'free', ncol = 4) + 
+    labs(title="Faceted Histograms for Continuous Variables", title_x="", title_y="") +
+    scale_fill_manual(values = c("darkgrey","red")) 
+    
+#p
+
+# the above ggplot doesn't seem to render correctly in RMarkdown, but it does in R Studio if you're curious. Therefore, we are displaying the result as a static image loaded from GitHub.
 ```
 
-<!--
-# ```{r, echo=TRUE}
-# 
-# # descriptive statistics, load into new data frame for processing
-# descriptiveTable <- stat.desc(employeeDatRaw)
-# 
-# # remove non-numeric features
-# dropcolumns <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime")
-# descriptiveTable <- descriptiveTable[,!(colnames(descriptiveTable) %in% dropcolumns)]
-# 
-# # round all numeric values to 2 decimal points
-# descriptiveTable <- round(descriptiveTable, 2)
-# 
-# # remove rows for statistics we don't care about, leaving: N, Mean, Median, Std Dev, Var, Min, Max
-# remove <- c("CI.mean.0.95", "nbr.val", "nbr.null", "nbr.na", "range", "sum", "SE.mean", "CI.mean", "coef.var")
-# descriptiveTable <- descriptiveTable[-which(rownames(descriptiveTable) %in% remove),]
-# 
-# # display descriptive statistics
-# knitr::kable(descriptiveTable,caption = "Descriptive Statistics for Numeric Features in the Raw Employee Data", row.names = TRUE, "html") %>%
-#   kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
-# 
-# ```
--->
-
-# Principal Components Analysis
-
-```{r, echo=TRUE}
-# remove non-numeric features, and features with zero variance
-dropcolumnsPCA <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime", "EmployeeCount", "StandardHours")
-employeeDatPCA <- employeeDatRaw[,!(colnames(employeeDatRaw) %in% dropcolumnsPCA)]
-
-# perform PCA
-employee_PCA <- prcomp(employeeDatPCA, center=TRUE, scale.=TRUE)
-
-# print principal components (only the first 4 PCs)
-print(employee_PCA$rotation[,1:4])
-
-# summary of principal components
-summary(employee_PCA)
-```
-
-```{r, echo=TRUE, fig.width=15, fig.height=10}
-# plot PCs using ggbiplot
-ggbiplot(employee_PCA, obs.scale=1, var.scale=1, groups=employeeDatPCA$Attrition, ellipse=TRUE, circle=TRUE) + theme(legend.position='top') + scale_color_discrete()
-
-biplot(employee_PCA) # Base R
-```
+![](https://github.com/bpwilke/DDSCaseStudy2/blob/MannyWorking2/DDS_CaseStudy2_files/ImageBackup.png?raw=true)
 
 # Exploring Attrition with Binomial Logistic Regression
 
@@ -316,27 +280,27 @@ misClasificError <- mean(fittedresults != test$Attrition, na.rm=TRUE) # this add
 print(paste('Accuracy',1-misClasificError))
 ```
 
-The model already exhibits very high predictive capability (86.4%), but we will now refit the model using only variables with signficance from the full model. This done to simplify the model for interpretation and to reduce potential multicolinearity issues.
+The model already exhibits very high predictive capability (86.4%), but we will now refit the model using only variables with signficance from the full model. This is done to simplify the model for interpretation and to reduce potential multicolinearity issues.
 
 The model will be fit with the following features:
 
-BusinessTravel
-DistanceFromHome
-EnvironmentSatisfaction
-Gender
-JobInvolvement
-JobRole (??)
-JobSatisfaction
-MaritalStatus
-NumCompaniesWorked
-OverTime
-RelationshipSatisfaction
-TotalWorkingYears
-TrainingTimesLastYear
-WorkLifeBalance
-YearsAtCompany
-YearsInCurrentRole
-YearsSinceLastPromotion
+BusinessTravel<br>
+DistanceFromHome<br>
+EnvironmentSatisfaction<br>
+Gender<br>
+JobInvolvement<br>
+JobRole<br>
+JobSatisfaction<br>
+MaritalStatus<br>
+NumCompaniesWorked<br>
+OverTime<br>
+RelationshipSatisfaction<br>
+TotalWorkingYears<br>
+TrainingTimesLastYear<br>
+WorkLifeBalance<br>
+YearsAtCompany<br>
+YearsInCurrentRole<br>
+YearsSinceLastPromotion<br>
 YearsWithCurrManager
 
 ```{r, echo=TRUE}
@@ -393,14 +357,12 @@ misClasificError <- mean(fittedresults != test$Attrition, na.rm=TRUE) # this add
 print(paste('Accuracy',1-misClasificError))
 ```
 
-The predictive capability of this reduced model improved slightly and has now been simplifed quite a bit in terms of the number of features.
+The predictive capability of this reduced model improved slightly to 88.77% and has now been simplifed quite a bit in terms of the number of features.
 
+# Using GLMNET and Cross-Validation for Feature Selection of Logistic Regression
 
+Our earlier approach was to intuitively select features from the data that represented statistical and practical significance to the question of interest. In this section we will employ an automated feature selection tool that leverages LASSO (Least Absolute Shrinkage and Selection Operator) and cross-validation to select important features in the model. 
 
-
-
-
-# Using GLMNET for Feature Selection of Logistic Regression
 ```{r, echo=TRUE}
 employee_logistic <- employeeDatRaw
 dropcolumns <- c("EmployeeCount", "StandardHours", "Over18") # removing these again, because they can't be used in the model
@@ -446,10 +408,46 @@ GLMTrain.x <- GLMTrain.x[,!(colnames(GLMTrain.x) %in% dropcolumns)]
 GLMTrain.x <- as.matrix(data.frame(GLMTrain.x, GLMTrain.xfactors))
 
 # use glmnet to fit a binomial logistic regression
-glmnetfit <- glmnet(GLMTrain.x, GLMTrain.y, family = "binomial")
+glmnetfit <- cv.glmnet(GLMTrain.x, GLMTrain.y, family = "binomial", alpha=1)
 
 plot(glmnetfit)
+```
 
+The above plot shows us that the optimal value of lambda in the LASSO model (the value that minimizes the mean square error) is approximately -5.75. We want to provide the smallest number of coeffecients, but also give good accuracy. For this, we will use the value of lambda that lies within one standard error of the optimal value of lamda to display those coeffecients that are significant.
+
+```{r, echo=TRUE}
+lambda_lse <- glmnetfit$lambda.1se
+coef(glmnetfit, s=lambda_lse)
+```
+
+These significant coeffecients are:
+
+Age<br>
+DistanceFromHome<br>
+EnvironmentSatisfaction<br>
+JobInvolvement<br>
+JobSatisfaction<br>
+MonthlyIncome<br>
+NumCompaniesWorked<br>
+RelationshipSatisfaction<br>
+StockOptionLevel<br>
+TotalWorkingYears<br>
+TrainingTimesLastYear<br>
+WorkLifeBalance<br>
+YearsInCurrentRole<br>
+YearsSinceLastPromotion<br>
+YearsWithCurrManager<br>
+Department<br>
+EducationField<br>
+JobRole<br>
+MaritalStatus<br>
+OverTimeYes<br>
+
+This is 20 total features, which is actually 2 more than our reduced model!
+
+We will proceed to test the predictive capability of this model like we've done before using the 20% of testing data.
+
+```{r, echo=TRUE}
 # # # START Prediction from GLMNET fit model # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 # prepare the test data in a similar manner for GLMNET usage (create dummy variables, matrix, etc.)
@@ -484,18 +482,31 @@ print(paste('Accuracy',1-misClasificError))
 
 ```
 
+This model exhibits less predictive capability on the hold out test set (86.39% accuracy). For this reason, we will use the reduced model as our final recommendation for predicting attrition. These features included:
+
+BusinessTravel<br>
+DistanceFromHome<br>
+EnvironmentSatisfaction<br>
+Gender<br>
+JobInvolvement<br>
+JobRole<br>
+JobSatisfaction<br>
+MaritalStatus<br>
+NumCompaniesWorked<br>
+OverTime<br>
+RelationshipSatisfaction<br>
+TotalWorkingYears<br>
+TrainingTimesLastYear<br>
+WorkLifeBalance<br>
+YearsAtCompany<br>
+YearsInCurrentRole<br>
+YearsSinceLastPromotion<br>
+YearsWithCurrManager
 
 
+# ROC Curve for our Final (Reduced) Predictive Model
 
-
-
-
-
-
-
-
-
-and now some ROC curves...
+An ROC curve is a graphical plot that illustrates the diagnostic ability of a binary classifier system like our logistic regression model. The curve is created by plotting the true positive rate (TPR) against the false positive rate (FPR)
 
 ```{r, echo=TRUE}
 #Create ROC curves

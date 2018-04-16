@@ -16,168 +16,9 @@ output:
 employeeDatRaw <- read.csv('CaseStudy2data.csv', header=TRUE)
 ```
 
-# Missing Values
-
-Fortunately, this data is not missing any values as demonstrated by the table below.
-
-
-```r
-# calculate NAs for raw data
-NAdataframe <- sapply(employeeDatRaw, function(x) sum(is.na(x)))
-# display NAs in kable table
-knitr::kable(NAdataframe, caption = "Counts of NAs (Missing Values) in Raw Data", row.names = TRUE, "html") %>%
-  kable_styling(bootstrap_options = c("striped","hover","condensed"), full_width=FALSE, position = "left")
-```
-
-<table class="table table-striped table-hover table-condensed" style="width: auto !important; ">
-<caption>Counts of NAs (Missing Values) in Raw Data</caption>
-<tbody>
-  <tr>
-   <td style="text-align:left;"> Age </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Attrition </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> BusinessTravel </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> DailyRate </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Department </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> DistanceFromHome </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Education </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> EducationField </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> EmployeeCount </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> EmployeeNumber </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> EnvironmentSatisfaction </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Gender </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> HourlyRate </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> JobInvolvement </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> JobLevel </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> JobRole </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> JobSatisfaction </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> MaritalStatus </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> MonthlyIncome </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> MonthlyRate </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> NumCompaniesWorked </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Over18 </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> OverTime </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> PercentSalaryHike </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> PerformanceRating </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> RelationshipSatisfaction </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> StandardHours </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> StockOptionLevel </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> TotalWorkingYears </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> TrainingTimesLastYear </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> WorkLifeBalance </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> YearsAtCompany </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> YearsInCurrentRole </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> YearsSinceLastPromotion </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> YearsWithCurrManager </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-</tbody>
-</table>
-
 ## Data Cleanup and Conversion
 
-#### Checking for missing data values . . .
+#### Checking for missing data values
 
 
 ```r
@@ -185,9 +26,13 @@ knitr::kable(NAdataframe, caption = "Counts of NAs (Missing Values) in Raw Data"
 numNAs <- sum(apply(employeeDatRaw,2,is.na))
 ```
 
+Fortunately, this data is not missing any values as demonstrated by the code ran above and output below.
+
 ##### Number of missing data values = 0
 
-#### Columns with no variation have no impact on attrition. Dropping . . .
+#### Columns with no variation have no impact on attrition
+
+We found several columns that don't have any variation and will actually cause future model building to fail. The code below is used to identify and remove those colomns. We also convert the response Attrition to numeric for future use.
 
 
 ```r
@@ -200,74 +45,159 @@ employeeDatRaw <- employeeDatRaw[,-drop_columns]
 factor_columns <- names(which(sapply(names(employeeDatRaw),function(x) class(employeeDatRaw[[x]])=="factor")))
 
 # convert factors to numeric
-# employeeDatRaw[,factor_columns] <- sapply(factor_columns,function(x) as.numeric(employeeDatRaw[[x]])-1)
+employeeDatRaw$Attrition <- as.numeric(employeeDatRaw$Attrition)-1
 ```
 
 ##### Dropped columns: EmployeeCount, Over18, StandardHours
 
-
-```r
-employeeDatRaw$Attrition <- as.numeric(employeeDatRaw$Attrition)-1
-
-# determine overall attrition rate
-attritionRate <- (sum(employeeDatRaw$Attrition) / nrow(employeeDatRaw)) * 100
-```
-
 ## Attrition Rates (Competitor Analysis)
 
-##### Overall attrition rate for XYZ Company: 16.12%
-### Per Compdata Surveys & Consulting: Turnover Report 2017
-#### Attrition rates in 2017 for all industires: 13.5% voluntary and 18.5% overall.
-#### Attrition rates in 2017 for Healthcare: 15.9% voluntary and 20.5% overall.
-#### Attrition rates in 2017 for Manufacturing and Distribution: 11.1% voluntary and 17.0% overall.
-
-
-## Additional Information to Collect
-##### Voluntary/involuntary breakdown
-##### Better job/department breakdown for Research & Development
-
 
 ```r
-# determine attrition rate by department
-AttritionByDept <- aggregate(employeeDatRaw$Attrition,by=list(Department=employeeDatRaw$Department),FUN=sum)
-SizeByDept <- count(employeeDatRaw,"Department")
-attritionRateByDept <- merge(AttritionByDept, SizeByDept, by="Department")
-attritionRateByDept$Rate <- (attritionRateByDept$x / attritionRateByDept$freq) * 100
-names(attritionRateByDept) <- c("Department", "Attrition", "PopulationSize", "AttritionRate")
+# determine overall attrition rate
+attritionRate <- (sum(employeeDatRaw$Attrition) / nrow(employeeDatRaw)) * 100
 
-# display attrition by department
-knitr::kable(attritionRateByDept,caption = "Attrition Rates by Department", row.names = TRUE, "html") %>%
+ind <- c("Overall","Healthcare","Manufacturing")
+vol <- c(13.5, 15.9, 11.1)
+total <- c(18.5, 20.5, 17.0)
+industryRates <- data.frame(ind,vol,total)
+names(industryRates) <- c("Industry", "Voluntary(%)", "Total(%)")
+
+# display industry attrition
+knitr::kable(industryRates, caption = "Attrition Rates. Per Compdata Surveys & Consulting's Turnover Report 2017", row.names = FALSE, "html") %>%
   kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
 ```
 
 <table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
-<caption>Attrition Rates by Department</caption>
+<caption>Attrition Rates. Per Compdata Surveys &amp; Consulting's Turnover Report 2017</caption>
  <thead>
   <tr>
-   <th style="text-align:left;">   </th>
-   <th style="text-align:left;"> Department </th>
-   <th style="text-align:right;"> Attrition </th>
-   <th style="text-align:right;"> PopulationSize </th>
-   <th style="text-align:right;"> AttritionRate </th>
+   <th style="text-align:left;"> Industry </th>
+   <th style="text-align:right;"> Voluntary(%) </th>
+   <th style="text-align:right;"> Total(%) </th>
   </tr>
  </thead>
 <tbody>
   <tr>
-   <td style="text-align:left;"> 1 </td>
+   <td style="text-align:left;"> Overall </td>
+   <td style="text-align:right;"> 14 </td>
+   <td style="text-align:right;"> 18 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Healthcare </td>
+   <td style="text-align:right;"> 16 </td>
+   <td style="text-align:right;"> 20 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Manufacturing </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 17 </td>
+  </tr>
+</tbody>
+</table>
+##### reference: http://blog.compdatasurveys.com/employee-turnover-trends-in-2017
+
+## Attrition Rates (XYZ Company)
+
+##### Overall attrition rate: 16.12%
+
+<style>
+caption {
+      color: black;
+      font-weight: bold;
+      font-size: 1.0em;
+      text-align:center;
+    } 
+</style>
+
+```r
+#############################################################
+# Determine and display attrition rates by attribute.
+#############################################################
+
+# AgeRange doesn't exist so it needs to be created.
+# AgeRange is used for statistical binning of ages.
+
+# generate age range bin
+ageBin <- function(x) {
+  if (x < 25) return ("< 25")
+  if (x < 35) return ("25-35")
+  if (x < 45) return ("35-45")
+  if (x < 55) return ("45-55")
+  return("55 and >")
+}
+
+attritionRaw <- employeeDatRaw
+attritionRaw$AgeRange <- sapply(attritionRaw$Age, ageBin)
+
+# attributes of interest
+# to change the set of attributes for which attrition rates are calculated,
+# simply change the next line
+attritionAttrs <- c("Department", "JobRole", "Gender", "AgeRange")
+
+###########################################################
+# helper functions for generating and displaying data
+###########################################################
+
+# generateAttritionDF generates a dataframe for attrition by attr, where attr is an
+# attribute (aka column) of the attrition dataframe
+generateAttritionDF <- function(attr,df) {
+  # construct the "by" list for the aggregate function
+  attrList <- list(df[[attr]])
+  names(attrList)[1] <- attr
+
+  # aggreate by attribute, counting the number of observations where attrition is true
+  attritionByAttr <- aggregate(df$Attrition,by=attrList,FUN=sum)
+  # determine number of observations for each attribute value
+  sizeByAttr <- count(df,attr)
+  # merge into a new dataframe and calculate the attrition rate for each attribute value
+  attritionRateByAttr <- merge(attritionByAttr, sizeByAttr, by=attr)
+  attritionRateByAttr$Rate <- (attritionRateByAttr$x / attritionRateByAttr$freq) * 100
+  names(attritionRateByAttr) <- c(attr, "Attrition", "PopulationSize", "AttritionRate(%)")
+  return(attritionRateByAttr)
+}
+
+# displayAttritionAttr displays the given data frame in a table with an appropriate title
+displayAttritionAttr <- function(attr, df) {
+    title <- paste("Attrition Rates by ", attr)
+    print(knitr::kable(df, caption = title, row.names = FALSE, "html") %>% kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"), full_width = F, position="left"))
+    return
+}
+
+#########################################################
+# end helper functions
+#########################################################
+
+# generate a table and display it for each attribute (column) of interest
+for (attr in attritionAttrs) {
+  displayAttritionAttr(attr, generateAttritionDF(attr, attritionRaw))
+}
+```
+
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
+<caption>Attrition Rates by  Department</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Department </th>
+   <th style="text-align:right;"> Attrition </th>
+   <th style="text-align:right;"> PopulationSize </th>
+   <th style="text-align:right;"> AttritionRate(%) </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
    <td style="text-align:left;"> Human Resources </td>
    <td style="text-align:right;"> 12 </td>
    <td style="text-align:right;"> 63 </td>
    <td style="text-align:right;"> 19 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 2 </td>
    <td style="text-align:left;"> Research &amp; Development </td>
    <td style="text-align:right;"> 133 </td>
    <td style="text-align:right;"> 961 </td>
    <td style="text-align:right;"> 14 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 3 </td>
    <td style="text-align:left;"> Sales </td>
    <td style="text-align:right;"> 92 </td>
    <td style="text-align:right;"> 446 </td>
@@ -275,166 +205,153 @@ knitr::kable(attritionRateByDept,caption = "Attrition Rates by Department", row.
   </tr>
 </tbody>
 </table>
-
-```r
-# determine attrition rate by job role
-attritionByJobRole <- aggregate(employeeDatRaw$Attrition, by=list(JobRole=employeeDatRaw$JobRole), FUN=sum)
-names(attritionByJobRole) <- c("JobRole","Attrition")
-satisfactionByJobRole <- aggregate(employeeDatRaw$JobSatisfaction, by=list(JobRole=employeeDatRaw$JobRole), FUN=stat.desc)
-# sizeByJobRole <- count(employeeDatRaw,"JobRole")
-attritionRateByJobRole <- cbind(attritionByJobRole, satisfactionByJobRole$x)
-attritionRateByJobRole$AttritionRate <- (attritionRateByJobRole$Attrition / attritionRateByJobRole$nbr.val) * 100
-drop_columns <- c("nbr.null","nbr.na","range","sum","SE.mean","CI.mean.0.95","coef.var")
-attritionRateByJobRole <- attritionRateByJobRole[ , !(names(attritionRateByJobRole) %in% drop_columns)]
- 
-names(attritionRateByJobRole) <- c("JobRole", "Attrition", "PopulationSize", "SatMin", "SatMax", "SatMedian","SatMean","SatVar","SatStdDev","AttritionRate")
-
-
-# display attrition rate by job role
-knitr::kable(attritionRateByJobRole,caption = "Attrition Rates by Job Role, Including Job Satisfaction Statistics", row.names = TRUE, "html") %>%
-  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
-```
-
-<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
-<caption>Attrition Rates by Job Role, Including Job Satisfaction Statistics</caption>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
+<caption>Attrition Rates by  JobRole</caption>
  <thead>
   <tr>
-   <th style="text-align:left;">   </th>
    <th style="text-align:left;"> JobRole </th>
    <th style="text-align:right;"> Attrition </th>
    <th style="text-align:right;"> PopulationSize </th>
-   <th style="text-align:right;"> SatMin </th>
-   <th style="text-align:right;"> SatMax </th>
-   <th style="text-align:right;"> SatMedian </th>
-   <th style="text-align:right;"> SatMean </th>
-   <th style="text-align:right;"> SatVar </th>
-   <th style="text-align:right;"> SatStdDev </th>
-   <th style="text-align:right;"> AttritionRate </th>
+   <th style="text-align:right;"> AttritionRate(%) </th>
   </tr>
  </thead>
 <tbody>
   <tr>
-   <td style="text-align:left;"> 1 </td>
    <td style="text-align:left;"> Healthcare Representative </td>
    <td style="text-align:right;"> 9 </td>
    <td style="text-align:right;"> 131 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 3.0 </td>
-   <td style="text-align:right;"> 2.8 </td>
-   <td style="text-align:right;"> 1.2 </td>
-   <td style="text-align:right;"> 1.1 </td>
    <td style="text-align:right;"> 6.9 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 2 </td>
    <td style="text-align:left;"> Human Resources </td>
    <td style="text-align:right;"> 12 </td>
    <td style="text-align:right;"> 52 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 2.5 </td>
-   <td style="text-align:right;"> 2.6 </td>
-   <td style="text-align:right;"> 1.1 </td>
-   <td style="text-align:right;"> 1.1 </td>
    <td style="text-align:right;"> 23.1 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 3 </td>
    <td style="text-align:left;"> Laboratory Technician </td>
    <td style="text-align:right;"> 62 </td>
    <td style="text-align:right;"> 259 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 3.0 </td>
-   <td style="text-align:right;"> 2.7 </td>
-   <td style="text-align:right;"> 1.3 </td>
-   <td style="text-align:right;"> 1.1 </td>
    <td style="text-align:right;"> 23.9 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 4 </td>
    <td style="text-align:left;"> Manager </td>
    <td style="text-align:right;"> 5 </td>
    <td style="text-align:right;"> 102 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 3.0 </td>
-   <td style="text-align:right;"> 2.7 </td>
-   <td style="text-align:right;"> 1.3 </td>
-   <td style="text-align:right;"> 1.1 </td>
    <td style="text-align:right;"> 4.9 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 5 </td>
    <td style="text-align:left;"> Manufacturing Director </td>
    <td style="text-align:right;"> 10 </td>
    <td style="text-align:right;"> 145 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 3.0 </td>
-   <td style="text-align:right;"> 2.7 </td>
-   <td style="text-align:right;"> 1.1 </td>
-   <td style="text-align:right;"> 1.1 </td>
    <td style="text-align:right;"> 6.9 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 6 </td>
    <td style="text-align:left;"> Research Director </td>
    <td style="text-align:right;"> 2 </td>
    <td style="text-align:right;"> 80 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 3.0 </td>
-   <td style="text-align:right;"> 2.7 </td>
-   <td style="text-align:right;"> 1.1 </td>
-   <td style="text-align:right;"> 1.1 </td>
    <td style="text-align:right;"> 2.5 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 7 </td>
    <td style="text-align:left;"> Research Scientist </td>
    <td style="text-align:right;"> 47 </td>
    <td style="text-align:right;"> 292 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 3.0 </td>
-   <td style="text-align:right;"> 2.8 </td>
-   <td style="text-align:right;"> 1.2 </td>
-   <td style="text-align:right;"> 1.1 </td>
    <td style="text-align:right;"> 16.1 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 8 </td>
    <td style="text-align:left;"> Sales Executive </td>
    <td style="text-align:right;"> 57 </td>
    <td style="text-align:right;"> 326 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 3.0 </td>
-   <td style="text-align:right;"> 2.8 </td>
-   <td style="text-align:right;"> 1.3 </td>
-   <td style="text-align:right;"> 1.1 </td>
    <td style="text-align:right;"> 17.5 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 9 </td>
    <td style="text-align:left;"> Sales Representative </td>
    <td style="text-align:right;"> 33 </td>
    <td style="text-align:right;"> 83 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:right;"> 3.0 </td>
-   <td style="text-align:right;"> 2.7 </td>
-   <td style="text-align:right;"> 1.1 </td>
-   <td style="text-align:right;"> 1.0 </td>
    <td style="text-align:right;"> 39.8 </td>
   </tr>
 </tbody>
 </table>
-
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
+<caption>Attrition Rates by  Gender</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Gender </th>
+   <th style="text-align:right;"> Attrition </th>
+   <th style="text-align:right;"> PopulationSize </th>
+   <th style="text-align:right;"> AttritionRate(%) </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Female </td>
+   <td style="text-align:right;"> 87 </td>
+   <td style="text-align:right;"> 588 </td>
+   <td style="text-align:right;"> 15 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Male </td>
+   <td style="text-align:right;"> 150 </td>
+   <td style="text-align:right;"> 882 </td>
+   <td style="text-align:right;"> 17 </td>
+  </tr>
+</tbody>
+</table>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
+<caption>Attrition Rates by  AgeRange</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> AgeRange </th>
+   <th style="text-align:right;"> Attrition </th>
+   <th style="text-align:right;"> PopulationSize </th>
+   <th style="text-align:right;"> AttritionRate(%) </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> &lt; 25 </td>
+   <td style="text-align:right;"> 38 </td>
+   <td style="text-align:right;"> 97 </td>
+   <td style="text-align:right;"> 39 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 25-35 </td>
+   <td style="text-align:right;"> 112 </td>
+   <td style="text-align:right;"> 554 </td>
+   <td style="text-align:right;"> 20 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 35-45 </td>
+   <td style="text-align:right;"> 51 </td>
+   <td style="text-align:right;"> 505 </td>
+   <td style="text-align:right;"> 10 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 45-55 </td>
+   <td style="text-align:right;"> 25 </td>
+   <td style="text-align:right;"> 245 </td>
+   <td style="text-align:right;"> 10 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 55 and &gt; </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 69 </td>
+   <td style="text-align:right;"> 16 </td>
+  </tr>
+</tbody>
+</table>
+## Additional Information to Collect
+##### Voluntary/involuntary breakdown
+##### Better job/department breakdown for Research & Development
 
 # Exploratory Data Analysis
+
+From the data provided we can clearly see that there is a subset of variabes that are continuous and another that are categorical. In order to better understand the distribution and skew of the continuous numerical columns a set of faceted histograms was generated. Other than Age which appears normaly distributed, it is clear that most columns are right skewed. Each factor for the categorical columns is summarized in a review. One of the more interesting distributions include YearsSinceLastPromotion, the large right skew could indicate a significant factor associated with attrition.
+
+We also notice from the data that EmployeeCount and StandardHours are the same value for all employees and are not meaningful variables. Similarly, EmployeeNumber does not produce any meaingful information given that each employee has a unique EmployeeNumber.
+
+When incorporating Attrition into the histograms it appears that those with more YearsAtCompany are less likely to leave the company. A similar trend is obsered with MonthlyIncome, the larger the MonthlyIncome the less Attrition is observed. Finally those with a higher JobLevel also appear to have less attrition than those with lower JobLevel values.
+
 
 ```r
 # descriptive statistics, load into new data frame for processing
@@ -724,140 +641,25 @@ summary(categoricalTable)
 ```
 
 ```r
-head(melt(continuousTable))
+continuousTable$Attrition <- employeeDatRaw$Attrition
+continuousTable$EmployeeCount <- NULL
+continuousTable$EmployeeNumber <- NULL
+continuousTable$StandardHours <- NULL
+
+facetPlot <- melt(continuousTable, id.vars = "Attrition")
+
+p <- ggplot(data = facetPlot, aes(x = value, fill=Attrition)) + 
+    geom_histogram(bins = 10, colour = "black") + 
+    facet_wrap(~variable, scales = 'free', ncol = 4) + 
+    labs(title="Faceted Histograms for Continuous Variables", title_x="", title_y="") +
+    scale_fill_manual(values = c("darkgrey","red")) 
+    
+#p
+
+# the above ggplot doesn't seem to render correctly in RMarkdown, but it does in R Studio if you're curious. Therefore, we are displaying the result as a static image loaded from GitHub.
 ```
 
-```
-## No id variables; using all as measure variables
-```
-
-```
-##   variable value
-## 1      Age    41
-## 2      Age    49
-## 3      Age    37
-## 4      Age    33
-## 5      Age    27
-## 6      Age    32
-```
-
-```r
-ggplot(data = melt(continuousTable), mapping = aes(x = value)) + 
-  geom_histogram(bins = 10) + facet_wrap(~variable, scales = 'free', ncol = 4) + 
-  labs(title="Faceted Histogrms for Continuous Variabls", title_x="", title_y="")
-```
-
-```
-## No id variables; using all as measure variables
-```
-
-<img src="DDS_CaseStudy2_files/figure-html/MannyEDA-1.png" style="display: block; margin: auto;" />
-
-<!--
-# ```{r, echo=TRUE}
-# 
-# # descriptive statistics, load into new data frame for processing
-# descriptiveTable <- stat.desc(employeeDatRaw)
-# 
-# # remove non-numeric features
-# dropcolumns <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime")
-# descriptiveTable <- descriptiveTable[,!(colnames(descriptiveTable) %in% dropcolumns)]
-# 
-# # round all numeric values to 2 decimal points
-# descriptiveTable <- round(descriptiveTable, 2)
-# 
-# # remove rows for statistics we don't care about, leaving: N, Mean, Median, Std Dev, Var, Min, Max
-# remove <- c("CI.mean.0.95", "nbr.val", "nbr.null", "nbr.na", "range", "sum", "SE.mean", "CI.mean", "coef.var")
-# descriptiveTable <- descriptiveTable[-which(rownames(descriptiveTable) %in% remove),]
-# 
-# # display descriptive statistics
-# knitr::kable(descriptiveTable,caption = "Descriptive Statistics for Numeric Features in the Raw Employee Data", row.names = TRUE, "html") %>%
-#   kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
-# 
-# ```
--->
-
-# Principal Components Analysis
-
-
-```r
-# remove non-numeric features, and features with zero variance
-dropcolumnsPCA <- c("Attrition", "BusinessTravel", "Department", "EducationField", "Gender", "JobRole", "MaritalStatus", "Over18", "OverTime", "EmployeeCount", "StandardHours")
-employeeDatPCA <- employeeDatRaw[,!(colnames(employeeDatRaw) %in% dropcolumnsPCA)]
-
-# perform PCA
-employee_PCA <- prcomp(employeeDatPCA, center=TRUE, scale.=TRUE)
-
-# print principal components (only the first 4 PCs)
-print(employee_PCA$rotation[,1:4])
-```
-
-```
-##                               PC1     PC2     PC3    PC4
-## Age                      -0.27701  0.2827 -0.2552  0.045
-## DailyRate                 0.00426  0.0353 -0.0602  0.059
-## DistanceFromHome         -0.00407 -0.0563 -0.0315  0.267
-## Education                -0.07782  0.1471 -0.1009  0.315
-## EmployeeNumber            0.00834  0.0127  0.0244  0.368
-## EnvironmentSatisfaction  -0.00270  0.0291  0.0476 -0.155
-## HourlyRate                0.01030  0.0451 -0.0306  0.453
-## JobInvolvement            0.00106  0.0480  0.0099  0.285
-## JobLevel                 -0.38283  0.1907 -0.1403 -0.122
-## JobSatisfaction           0.00899 -0.0362 -0.0013 -0.261
-## MonthlyIncome            -0.37474  0.1998 -0.1524 -0.128
-## MonthlyRate              -0.00553  0.0626 -0.0345 -0.199
-## NumCompaniesWorked       -0.04849  0.3786 -0.3053  0.082
-## PercentSalaryHike         0.01583 -0.4257 -0.5582 -0.010
-## PerformanceRating         0.00006 -0.4444 -0.5420 -0.018
-## RelationshipSatisfaction -0.01568  0.0872  0.0076 -0.159
-## StockOptionLevel         -0.01584 -0.0071 -0.0166  0.425
-## TotalWorkingYears        -0.40346  0.1699 -0.1526 -0.028
-## TrainingTimesLastYear     0.01154 -0.0427  0.0660 -0.056
-## WorkLifeBalance          -0.01265 -0.0136  0.0236 -0.087
-## YearsAtCompany           -0.39150 -0.2164  0.1825  0.018
-## YearsInCurrentRole       -0.33592 -0.2815  0.1986  0.075
-## YearsSinceLastPromotion  -0.29741 -0.2032  0.1627  0.018
-## YearsWithCurrManager     -0.33038 -0.2815  0.2141  0.089
-```
-
-```r
-# summary of principal components
-summary(employee_PCA)
-```
-
-```
-## Importance of components%s:
-##                          PC1    PC2    PC3    PC4    PC5   PC6   PC7
-## Standard deviation     2.158 1.3551 1.3250 1.1006 1.0677 1.040 1.028
-## Proportion of Variance 0.194 0.0765 0.0732 0.0505 0.0475 0.045 0.044
-## Cumulative Proportion  0.194 0.2705 0.3437 0.3941 0.4416 0.487 0.531
-##                           PC8    PC9   PC10   PC11   PC12   PC13   PC14
-## Standard deviation     1.0215 1.0117 0.9954 0.9854 0.9750 0.9520 0.9505
-## Proportion of Variance 0.0435 0.0427 0.0413 0.0405 0.0396 0.0378 0.0377
-## Cumulative Proportion  0.5742 0.6169 0.6581 0.6986 0.7382 0.7760 0.8136
-##                         PC15   PC16   PC17   PC18   PC19   PC20    PC21
-## Standard deviation     0.942 0.9317 0.8680 0.7358 0.7226 0.5290 0.47546
-## Proportion of Variance 0.037 0.0362 0.0314 0.0226 0.0218 0.0117 0.00942
-## Cumulative Proportion  0.851 0.8868 0.9182 0.9407 0.9625 0.9742 0.98358
-##                          PC22    PC23    PC24
-## Standard deviation     0.4515 0.37649 0.21998
-## Proportion of Variance 0.0085 0.00591 0.00202
-## Cumulative Proportion  0.9921 0.99798 1.00000
-```
-
-
-```r
-# plot PCs using ggbiplot
-ggbiplot(employee_PCA, obs.scale=1, var.scale=1, groups=employeeDatPCA$Attrition, ellipse=TRUE, circle=TRUE) + theme(legend.position='top') + scale_color_discrete()
-```
-
-![](DDS_CaseStudy2_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
-
-```r
-biplot(employee_PCA) # Base R
-```
-
-![](DDS_CaseStudy2_files/figure-html/unnamed-chunk-8-2.png)<!-- -->
+![](https://github.com/bpwilke/DDSCaseStudy2/blob/MannyWorking2/DDS_CaseStudy2_files/ImageBackup.png?raw=true)
 
 # Exploring Attrition with Binomial Logistic Regression
 
@@ -1042,27 +844,27 @@ print(paste('Accuracy',1-misClasificError))
 ## [1] "Accuracy 0.863945578231292"
 ```
 
-The model already exhibits very high predictive capability (86.4%), but we will now refit the model using only variables with signficance from the full model. This done to simplify the model for interpretation and to reduce potential multicolinearity issues.
+The model already exhibits very high predictive capability (86.4%), but we will now refit the model using only variables with signficance from the full model. This is done to simplify the model for interpretation and to reduce potential multicolinearity issues.
 
 The model will be fit with the following features:
 
-BusinessTravel
-DistanceFromHome
-EnvironmentSatisfaction
-Gender
-JobInvolvement
-JobRole (??)
-JobSatisfaction
-MaritalStatus
-NumCompaniesWorked
-OverTime
-RelationshipSatisfaction
-TotalWorkingYears
-TrainingTimesLastYear
-WorkLifeBalance
-YearsAtCompany
-YearsInCurrentRole
-YearsSinceLastPromotion
+BusinessTravel<br>
+DistanceFromHome<br>
+EnvironmentSatisfaction<br>
+Gender<br>
+JobInvolvement<br>
+JobRole<br>
+JobSatisfaction<br>
+MaritalStatus<br>
+NumCompaniesWorked<br>
+OverTime<br>
+RelationshipSatisfaction<br>
+TotalWorkingYears<br>
+TrainingTimesLastYear<br>
+WorkLifeBalance<br>
+YearsAtCompany<br>
+YearsInCurrentRole<br>
+YearsSinceLastPromotion<br>
 YearsWithCurrManager
 
 
@@ -1206,14 +1008,12 @@ print(paste('Accuracy',1-misClasificError))
 ## [1] "Accuracy 0.887755102040816"
 ```
 
-The predictive capability of this reduced model improved slightly and has now been simplifed quite a bit in terms of the number of features.
+The predictive capability of this reduced model improved slightly to 88.77% and has now been simplifed quite a bit in terms of the number of features.
 
+# Using GLMNET and Cross-Validation for Feature Selection of Logistic Regression
 
+Our earlier approach was to intuitively select features from the data that represented statistical and practical significance to the question of interest. In this section we will employ an automated feature selection tool that leverages LASSO (Least Absolute Shrinkage and Selection Operator) and cross-validation to select important features in the model. 
 
-
-
-
-# Using GLMNET for Feature Selection of Logistic Regression
 
 ```r
 employee_logistic <- employeeDatRaw
@@ -1260,12 +1060,99 @@ GLMTrain.x <- GLMTrain.x[,!(colnames(GLMTrain.x) %in% dropcolumns)]
 GLMTrain.x <- as.matrix(data.frame(GLMTrain.x, GLMTrain.xfactors))
 
 # use glmnet to fit a binomial logistic regression
-glmnetfit <- glmnet(GLMTrain.x, GLMTrain.y, family = "binomial")
+glmnetfit <- cv.glmnet(GLMTrain.x, GLMTrain.y, family = "binomial", alpha=1)
 
 plot(glmnetfit)
 ```
 
-![](DDS_CaseStudy2_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+![](DDS_CaseStudy2_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+
+The above plot shows us that the optimal value of lambda in the LASSO model (the value that minimizes the mean square error) is approximately -5.75. We want to provide the smallest number of coeffecients, but also give good accuracy. For this, we will use the value of lambda that lies within one standard error of the optimal value of lamda to display those coeffecients that are significant.
+
+
+```r
+lambda_lse <- glmnetfit$lambda.1se
+coef(glmnetfit, s=lambda_lse)
+```
+
+```
+## 46 x 1 sparse Matrix of class "dgCMatrix"
+##                                                     1
+## (Intercept)                                 -1.887162
+## Age                                          0.027382
+## DailyRate                                    .       
+## DistanceFromHome                            -0.015289
+## Education                                    .       
+## EmployeeNumber                               .       
+## EnvironmentSatisfaction                      0.201419
+## HourlyRate                                   .       
+## JobInvolvement                               0.386889
+## JobLevel                                     .       
+## JobSatisfaction                              0.211354
+## MonthlyIncome                                0.000025
+## MonthlyRate                                  .       
+## NumCompaniesWorked                          -0.090664
+## PercentSalaryHike                            .       
+## PerformanceRating                            .       
+## RelationshipSatisfaction                     0.127486
+## StockOptionLevel                             0.113833
+## TotalWorkingYears                            0.010151
+## TrainingTimesLastYear                        0.085996
+## WorkLifeBalance                              0.167085
+## YearsAtCompany                               .       
+## YearsInCurrentRole                           0.045513
+## YearsSinceLastPromotion                     -0.027188
+## YearsWithCurrManager                         0.023270
+## GLMTrain.x.BusinessTravelTravel_Frequently  -0.581233
+## GLMTrain.x.BusinessTravelTravel_Rarely       .       
+## GLMTrain.x.DepartmentResearch...Development  0.386551
+## GLMTrain.x.DepartmentSales                   .       
+## GLMTrain.x.EducationFieldLife.Sciences       .       
+## GLMTrain.x.EducationFieldMarketing           .       
+## GLMTrain.x.EducationFieldMedical             0.092753
+## GLMTrain.x.EducationFieldOther               .       
+## GLMTrain.x.EducationFieldTechnical.Degree   -0.490319
+## GLMTrain.x.GenderMale                        .       
+## GLMTrain.x.JobRoleHuman.Resources            .       
+## GLMTrain.x.JobRoleLaboratory.Technician     -0.704058
+## GLMTrain.x.JobRoleManager                    .       
+## GLMTrain.x.JobRoleManufacturing.Director     .       
+## GLMTrain.x.JobRoleResearch.Director          .       
+## GLMTrain.x.JobRoleResearch.Scientist         .       
+## GLMTrain.x.JobRoleSales.Executive            .       
+## GLMTrain.x.JobRoleSales.Representative      -0.714283
+## GLMTrain.x.MaritalStatusMarried              .       
+## GLMTrain.x.MaritalStatusSingle              -0.484933
+## GLMTrain.x.OverTimeYes                      -1.331467
+```
+
+These significant coeffecients are:
+
+Age<br>
+DistanceFromHome<br>
+EnvironmentSatisfaction<br>
+JobInvolvement<br>
+JobSatisfaction<br>
+MonthlyIncome<br>
+NumCompaniesWorked<br>
+RelationshipSatisfaction<br>
+StockOptionLevel<br>
+TotalWorkingYears<br>
+TrainingTimesLastYear<br>
+WorkLifeBalance<br>
+YearsInCurrentRole<br>
+YearsSinceLastPromotion<br>
+YearsWithCurrManager<br>
+Department<br>
+EducationField<br>
+JobRole<br>
+MaritalStatus<br>
+OverTimeYes<br>
+
+This is 20 total features, which is actually 2 more than our reduced model!
+
+We will proceed to test the predictive capability of this model like we've done before using the 20% of testing data.
+
 
 ```r
 # # # START Prediction from GLMNET fit model # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -1302,21 +1189,34 @@ print(paste('Accuracy',1-misClasificError))
 ```
 
 ```
-## [1] "Accuracy 0.865861287043553"
+## [1] "Accuracy 0.863945578231292"
 ```
 
+This model exhibits less predictive capability on the hold out test set (86.39% accuracy). For this reason, we will use the reduced model as our final recommendation for predicting attrition. These features included:
+
+BusinessTravel<br>
+DistanceFromHome<br>
+EnvironmentSatisfaction<br>
+Gender<br>
+JobInvolvement<br>
+JobRole<br>
+JobSatisfaction<br>
+MaritalStatus<br>
+NumCompaniesWorked<br>
+OverTime<br>
+RelationshipSatisfaction<br>
+TotalWorkingYears<br>
+TrainingTimesLastYear<br>
+WorkLifeBalance<br>
+YearsAtCompany<br>
+YearsInCurrentRole<br>
+YearsSinceLastPromotion<br>
+YearsWithCurrManager
 
 
+# ROC Curve for our Final (Reduced) Predictive Model
 
-
-
-
-
-
-
-
-
-and now some ROC curves...
+An ROC curve is a graphical plot that illustrates the diagnostic ability of a binary classifier system like our logistic regression model. The curve is created by plotting the true positive rate (TPR) against the false positive rate (FPR)
 
 
 ```r
@@ -1336,4 +1236,4 @@ auc <- auc@y.values[[1]]
 text(x = .40, y = .6,paste("AUC = ", round(auc,3), sep = ""))
 ```
 
-![](DDS_CaseStudy2_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+![](DDS_CaseStudy2_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
