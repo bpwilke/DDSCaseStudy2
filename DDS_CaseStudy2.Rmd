@@ -7,7 +7,7 @@ output:
     keep_md: true
 ---
 
-###### Data can be found at https://github.com/bpwilke/DDSCaseStudy2
+###### Source files can be found at https://github.com/bpwilke/DDSCaseStudy2
 
 ```{r setup, include=FALSE}
 # Load necessary packages and ensure they are active
@@ -205,7 +205,7 @@ for (attr in attritionAttrs) {
 ## Areas of High Attrition
 * Attrition in the Sales Department is above the healthcare industry average for sales (21% vs 14.1%), most notably among Sales Representatives who are at 40%
 * The Human Resources Department is also above the healthcare industry average (19% vs. 16%)
-* Within Research & Development, Laboratory Technician is above average at 24%
+* Within Research & Development, Laboratory Technician is significantly above average at 24%
 * Job Level 1 is significantly above average at 26%
 * Attrition by gender shows only a 2% difference
 * Among those 25 and Under and 25-35 attrition is above industry average at 39% and 20% respectively. However, attrition is typically above the average in the younger age ranges.
