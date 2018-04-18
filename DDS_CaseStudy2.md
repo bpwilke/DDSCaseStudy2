@@ -45,7 +45,6 @@ employeeDatRaw <- employeeDatRaw[,-drop_columns]
 factor_columns <- names(which(sapply(names(employeeDatRaw),function(x) class(employeeDatRaw[[x]])=="factor")))
 
 # convert factors to numeric
-#employeeDatRaw[,factor_columns] <- sapply(factor_columns,function(x) as.numeric(employeeDatRaw[[x]])-1)
 employeeDatRaw$Attrition <- as.numeric(employeeDatRaw$Attrition)-1
 ```
 
@@ -60,9 +59,9 @@ attritionRate <- (sum(employeeDatRaw$Attrition) / nrow(employeeDatRaw)) * 100
 
 ind <- c("Overall","Healthcare","Manufacturing")
 vol <- c(13.5, 15.9, 11.1)
-invol <- c(18.5, 20.5, 17.0)
-industryRates <- data.frame(ind,vol,invol)
-names(industryRates) <- c("Industry", "Voluntary(%)", "Involuntary(%)")
+total <- c(18.5, 20.5, 17.0)
+industryRates <- data.frame(ind,vol,total)
+names(industryRates) <- c("Industry", "Voluntary(%)", "Total(%)")
 
 # display industry attrition
 knitr::kable(industryRates, caption = "Attrition Rates. Per Compdata Surveys & Consulting's Turnover Report 2017", row.names = FALSE, "html") %>%
@@ -75,7 +74,7 @@ knitr::kable(industryRates, caption = "Attrition Rates. Per Compdata Surveys & C
   <tr>
    <th style="text-align:left;"> Industry </th>
    <th style="text-align:right;"> Voluntary(%) </th>
-   <th style="text-align:right;"> Involuntary(%) </th>
+   <th style="text-align:right;"> Total(%) </th>
   </tr>
  </thead>
 <tbody>
@@ -102,28 +101,87 @@ knitr::kable(industryRates, caption = "Attrition Rates. Per Compdata Surveys & C
 
 ##### Overall attrition rate: 16.12%
 
+<style>
+caption {
+      color: black;
+      font-weight: bold;
+      font-size: 1.0em;
+      text-align:center;
+    } 
+</style>
 
 ```r
-# determine attrition rate by department
-AttritionByDept <- aggregate(employeeDatRaw$Attrition,by=list(Department=employeeDatRaw$Department),FUN=sum)
-SizeByDept <- count(employeeDatRaw,"Department")
-attritionRateByDept <- merge(AttritionByDept, SizeByDept, by="Department")
-attritionRateByDept$Rate <- (attritionRateByDept$x / attritionRateByDept$freq) * 100
-names(attritionRateByDept) <- c("Department", "Attrition", "PopulationSize", "AttritionRate")
+#############################################################
+# Determine and display attrition rates by attribute.
+#############################################################
 
-# display attrition by department
-knitr::kable(attritionRateByDept,caption = "Attrition Rates by Department", row.names = FALSE, "html") %>%
-  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
+# AgeRange doesn't exist so it needs to be created.
+# AgeRange is used for statistical binning of ages.
+
+# generate age range bin
+ageBin <- function(x) {
+  if (x < 25) return ("< 25")
+  if (x < 35) return ("25-35")
+  if (x < 45) return ("35-45")
+  if (x < 55) return ("45-55")
+  return("55 and >")
+}
+
+attritionRaw <- employeeDatRaw
+attritionRaw$AgeRange <- sapply(attritionRaw$Age, ageBin)
+
+# attributes of interest
+# to change the set of attributes for which attrition rates are calculated,
+# simply change the next line
+attritionAttrs <- c("Department", "JobRole", "Gender", "AgeRange")
+
+###########################################################
+# helper functions for generating and displaying data
+###########################################################
+
+# generateAttritionDF generates a dataframe for attrition by attr, where attr is an
+# attribute (aka column) of the attrition dataframe
+generateAttritionDF <- function(attr,df) {
+  # construct the "by" list for the aggregate function
+  attrList <- list(df[[attr]])
+  names(attrList)[1] <- attr
+
+  # aggreate by attribute, counting the number of observations where attrition is true
+  attritionByAttr <- aggregate(df$Attrition,by=attrList,FUN=sum)
+  # determine number of observations for each attribute value
+  sizeByAttr <- count(df,attr)
+  # merge into a new dataframe and calculate the attrition rate for each attribute value
+  attritionRateByAttr <- merge(attritionByAttr, sizeByAttr, by=attr)
+  attritionRateByAttr$Rate <- (attritionRateByAttr$x / attritionRateByAttr$freq) * 100
+  names(attritionRateByAttr) <- c(attr, "Attrition", "PopulationSize", "AttritionRate(%)")
+  return(attritionRateByAttr)
+}
+
+# displayAttritionAttr displays the given data frame in a table with an appropriate title
+displayAttritionAttr <- function(attr, df) {
+    title <- paste("Attrition Rates by ", attr)
+    print(knitr::kable(df, caption = title, row.names = FALSE, "html") %>% kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"), full_width = F, position="left"))
+    return
+}
+
+#########################################################
+# end helper functions
+#########################################################
+
+# generate a table and display it for each attribute (column) of interest
+for (attr in attritionAttrs) {
+  displayAttritionAttr(attr, generateAttritionDF(attr, attritionRaw))
+}
 ```
 
-<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
-<caption>Attrition Rates by Department</caption>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
+<caption>Attrition Rates by  Department</caption>
  <thead>
   <tr>
    <th style="text-align:left;"> Department </th>
    <th style="text-align:right;"> Attrition </th>
    <th style="text-align:right;"> PopulationSize </th>
-   <th style="text-align:right;"> AttritionRate </th>
+   <th style="text-align:right;"> AttritionRate(%) </th>
   </tr>
  </thead>
 <tbody>
@@ -147,28 +205,14 @@ knitr::kable(attritionRateByDept,caption = "Attrition Rates by Department", row.
   </tr>
 </tbody>
 </table>
-
-```r
-# determine attrition rate by job role
-attritionByJobRole <- aggregate(employeeDatRaw$Attrition, by=list(JobRole=employeeDatRaw$JobRole), FUN=sum)
-sizeByRole <- count(employeeDatRaw,"JobRole")
-attritionRateByJobRole <- merge(attritionByJobRole,sizeByRole, by="JobRole")
-attritionRateByJobRole$Rate <- (attritionRateByJobRole$x / attritionRateByJobRole$freq) * 100
-names(attritionRateByJobRole) <- c("JobRole", "Attrition", "PopulationSize", "AttritionRate")
-
-# display attrition rate by job role
-knitr::kable(attritionRateByJobRole,caption = "Attrition Rates by Job Role", row.names = FALSE, "html") %>%
-  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
-```
-
-<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
-<caption>Attrition Rates by Job Role</caption>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
+<caption>Attrition Rates by  JobRole</caption>
  <thead>
   <tr>
    <th style="text-align:left;"> JobRole </th>
    <th style="text-align:right;"> Attrition </th>
    <th style="text-align:right;"> PopulationSize </th>
-   <th style="text-align:right;"> AttritionRate </th>
+   <th style="text-align:right;"> AttritionRate(%) </th>
   </tr>
  </thead>
 <tbody>
@@ -228,28 +272,14 @@ knitr::kable(attritionRateByJobRole,caption = "Attrition Rates by Job Role", row
   </tr>
 </tbody>
 </table>
-
-```r
-# determine attrition rate by gender
-attritionByGender <- aggregate(employeeDatRaw$Attrition, by=list(Gender=employeeDatRaw$Gender), FUN=sum)
-sizeByGender <- count(employeeDatRaw,"Gender")
-attritionRateByGender <- merge(attritionByGender,sizeByGender, by="Gender")
-attritionRateByGender$Rate <- (attritionRateByGender$x / attritionRateByGender$freq) * 100
-names(attritionRateByGender) <- c("Gender", "Attrition", "PopulationSize", "AttritionRate")
-
-# display attrition rate by gender
-knitr::kable(attritionRateByGender,caption = "Attrition Rates by Gender", row.names = FALSE, "html") %>%
-  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
-```
-
-<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
-<caption>Attrition Rates by Gender</caption>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
+<caption>Attrition Rates by  Gender</caption>
  <thead>
   <tr>
    <th style="text-align:left;"> Gender </th>
    <th style="text-align:right;"> Attrition </th>
    <th style="text-align:right;"> PopulationSize </th>
-   <th style="text-align:right;"> AttritionRate </th>
+   <th style="text-align:right;"> AttritionRate(%) </th>
   </tr>
  </thead>
 <tbody>
@@ -267,37 +297,14 @@ knitr::kable(attritionRateByGender,caption = "Attrition Rates by Gender", row.na
   </tr>
 </tbody>
 </table>
-
-```r
-ageBin <- function(x) {
-  if (x < 25) return ("< 25")
-  if (x < 35) return ("25-35")
-  if (x < 45) return ("35-45")
-  if (x < 55) return ("45-55")
-  return("55 and >")
-}
-# determine attrition rate by age
-attritionRaw <- employeeDatRaw
-attritionRaw$AgeBin <- sapply(attritionRaw$Age, ageBin)
-attritionByAge <- aggregate(attritionRaw$Attrition, by=list(AgeBin=attritionRaw$AgeBin), FUN=sum)
-sizeByAge <- count(attritionRaw,"AgeBin")
-attritionRateByAge <- merge(attritionByAge, sizeByAge, by="AgeBin")
-attritionRateByAge$Rate <- (attritionRateByAge$x / attritionRateByAge$freq) * 100
-names(attritionRateByAge) <- c("AgeRange", "Attrition", "PopulationSize", "AttritionRate")
-
-# display attrition rate by age range
-knitr::kable(attritionRateByAge,caption = "Attrition Rates by Age Range", row.names = FALSE, "html") %>%
-  kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"))
-```
-
-<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
-<caption>Attrition Rates by Age Range</caption>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
+<caption>Attrition Rates by  AgeRange</caption>
  <thead>
   <tr>
    <th style="text-align:left;"> AgeRange </th>
    <th style="text-align:right;"> Attrition </th>
    <th style="text-align:right;"> PopulationSize </th>
-   <th style="text-align:right;"> AttritionRate </th>
+   <th style="text-align:right;"> AttritionRate(%) </th>
   </tr>
  </thead>
 <tbody>
