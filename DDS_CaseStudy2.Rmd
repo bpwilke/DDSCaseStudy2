@@ -6,13 +6,16 @@ output:
   html_document:
     keep_md: true
 ---
+
+###### Data can be found at https://github.com/bpwilke/DDSCaseStudy2
+
 ```{r setup, include=FALSE}
 # Load necessary packages and ensure they are active
 load.lib = c("kableExtra","ggplot2","Amelia","pastecs","ROCR","reshape2","devtools","glmnet")
 
 install.lib = load.lib[!load.lib %in% installed.packages()]
 for(lib in install.lib){
-  install.packages(lib,dependences=TRUE)
+  install.packages(lib,dependencies=TRUE)
 } 
 
 sapply(load.lib,require,character=TRUE)
@@ -25,10 +28,18 @@ library(pastecs) # for easy descriptive statistics
 library(ROCR) # for ROC plots and AUC calculations
 library(glmnet)
 # turn off scientfic notation for the entire script
+# set precision of decimal place to 2
 options(scipen = 999, digits=2)
 ```
+<span style="color:blue;font-size:32px;font-style: italic; font-weight: bold;">DDSAnalytics</span>
+<span style="font-style: italic; font-weight: bold;">Specializing in talent management solutions for Fortune 1000 companies</span>
 
 ## Introduction
+Cabbot Laboratories has engaged DDSAnalytics to provide insight on employee attrition, including:
+
+* Overview of the current attrition situation
+* Determination of factors that lead to attrition
+* Prediction of future employee turnover
 
 ```{r, echo=TRUE}
 # load raw data
@@ -70,6 +81,11 @@ employeeDatRaw$Attrition <- as.numeric(employeeDatRaw$Attrition)-1
 
 ## Attrition Rates (Competitor Analysis)
 
+### By Industry
+
+Cabbot Laboratories is a leader in the healthcare industry providing top tier pharmaceuticals, medical devices, diagnostics, and nutrition products.
+As such, we look to the healthcare and manufacturing industries for competitive analysis.
+
 ```{r, echo=TRUE}
 
 # determine overall attrition rate
@@ -87,7 +103,13 @@ knitr::kable(industryRates, caption = "Attrition Rates. Per Compdata Surveys & C
 ```
 ##### reference: http://blog.compdatasurveys.com/employee-turnover-trends-in-2017
 
-## Attrition Rates (XYZ Company)
+### By Job Role
+
+#### Healthcare industry attrition in Sales is 14.1%
+
+##### reference: https://radford.aon.com/insights/articles/2016/Turnover-Rates-for-Sales-Employees-Reach-a-Five-Year-High
+
+## Voluntary Attrition Rates (Cabbot Laboratories)
 
 ##### Overall attrition rate: `r attritionRate`%
 
@@ -99,6 +121,8 @@ caption {
       text-align:center;
     } 
 </style>
+
+### Demographic Analysis
 ```{r, echo=TRUE, results="asis"}
 
 #############################################################
@@ -123,7 +147,7 @@ attritionRaw$AgeRange <- sapply(attritionRaw$Age, ageBin)
 # attributes of interest
 # to change the set of attributes for which attrition rates are calculated,
 # simply change the next line
-attritionAttrs <- c("Department", "JobRole", "Gender", "AgeRange")
+attritionAttrs <- c("Department", "JobRole", "JobLevel", "Gender", "AgeRange")
 
 ###########################################################
 # helper functions for generating and displaying data
@@ -138,19 +162,27 @@ generateAttritionDF <- function(attr,df) {
 
   # aggreate by attribute, counting the number of observations where attrition is true
   attritionByAttr <- aggregate(df$Attrition,by=attrList,FUN=sum)
+  
   # determine number of observations for each attribute value
   sizeByAttr <- count(df,attr)
+  
   # merge into a new dataframe and calculate the attrition rate for each attribute value
   attritionRateByAttr <- merge(attritionByAttr, sizeByAttr, by=attr)
-  attritionRateByAttr$Rate <- (attritionRateByAttr$x / attritionRateByAttr$freq) * 100
-  names(attritionRateByAttr) <- c(attr, "Attrition", "PopulationSize", "AttritionRate(%)")
+  names(attritionRateByAttr) <- c(attr, "Attrition", "PopulationSize")
+  
+  # calculate attrition rate and format as percentage
+  attritionRateByAttr$AttritionRate <- (attritionRateByAttr$Attrition / attritionRateByAttr$PopulationSize) * 100
+  
+  # sort by attrition rate, descending
+  attritionRateByAttr <- attritionRateByAttr[order(attritionRateByAttr$AttritionRate, decreasing = TRUE),]
   return(attritionRateByAttr)
 }
 
 # displayAttritionAttr displays the given data frame in a table with an appropriate title
 displayAttritionAttr <- function(attr, df) {
     title <- paste("Attrition Rates by ", attr)
-    print(knitr::kable(df, caption = title, row.names = FALSE, "html") %>% kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"), full_width = F, position="left"))
+    df$AttritionRate <- sapply(df$AttritionRate, function(x) sprintf("%.0f%%", x)) # format rate as a percentage
+    print(knitr::kable(df, caption = title, row.names = FALSE, "html", align="r") %>% kable_styling(bootstrap_options = c("striped","hover", "condensed", "responsive"), full_width = F))
     return
 }
 
@@ -158,14 +190,26 @@ displayAttritionAttr <- function(attr, df) {
 # end helper functions
 #########################################################
 
+
+
 # generate a table and display it for each attribute (column) of interest
 for (attr in attritionAttrs) {
   displayAttritionAttr(attr, generateAttritionDF(attr, attritionRaw))
+ 
 }
 ```
-## Additional Information to Collect
-##### Voluntary/involuntary breakdown
-##### Better job/department breakdown for Research & Development
+
+### Summary
+#### Overall voluntary attrition is slightly above industry average at `r attritionRate`% vs. 16%. 
+
+## Areas of High Attrition
+* Attrition in the Sales Department is above the healthcare industry average for sales (21% vs 14.1%), most notably among Sales Representatives who are at 40%
+* The Human Resources Department is also above the healthcare industry average (19% vs. 16%)
+* Within Research & Development, Laboratory Technician is above average at 24%
+* Job Level 1 is significantly above average at 26%
+* Attrition by gender shows only a 2% difference
+* Among those 25 and Under and 25-35 attrition is above industry average at 39% and 20% respectively. However, attrition is typically above the average in the younger age ranges.
+* Attrition among the 55 and Over age range is at industry average. However attrition typically goes down as age increases and this age range is above that of the two preceeding ranges
 
 # Exploratory Data Analysis
 
